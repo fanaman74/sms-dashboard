@@ -480,6 +480,7 @@ nav.tabs a.active .count{background:var(--accent); color:#fff}
 .report-icon{font-size:1.6rem; line-height:1}
 .report-label{font-size:.9rem; font-weight:600; color:var(--text)}
 .report-sub{font-size:.75rem; color:var(--text-muted); margin-top:2px}
+.muted-small{color:var(--text-muted); font-size:.82rem; max-width:320px}
 @media (prefers-color-scheme: dark){
   .subj{background:hsl(var(--h) 50% 22%); color:hsl(var(--h) 75% 80%)}
 }
@@ -609,6 +610,7 @@ SHELL = """
     <a href="{{ url_for('diary_view') }}" class="{% if view=='diary' %}active{% endif %}">Course Diary</a>
     <a href="{{ url_for('schedule_view') }}" class="{% if view=='schedule' %}active{% endif %}">Schedule</a>
     <a href="{{ url_for('grades_view') }}" class="{% if view=='grades' %}active{% endif %}">Grades</a>
+    <a href="{{ url_for('files_view') }}" class="{% if view=='files' %}active{% endif %}">Files</a>
     <a href="{{ url_for('tests_view') }}" class="{% if view=='tests' %}active{% endif %}">Exercises</a>
   </nav>
 
@@ -891,6 +893,106 @@ def tests_view():
                 '<th>Description</th><th>Weight</th><th>Grade</th></tr></thead><tbody>'
                 + "".join(tr) + '</tbody></table>')
     return render("Graded Exercises", "tests", body, _count_summary(assignments))
+
+
+@app.route("/files")
+def files_view():
+    """Aggregate all file attachments across entries + messages."""
+    assignments, _, _, _, _ = load_all()
+    rows: list[dict] = []
+    if USE_SUPABASE:
+        sb = _db.get_client()
+        # entries with attachments
+        entries = sb.table("entries").select(
+            "kind,subject,entry_date,entry_date_text,description,attachments"
+        ).range(0, 9999).execute().data or []
+        for e in entries:
+            for a in (e.get("attachments") or []):
+                if not a.get("name") or not a.get("href"):
+                    continue
+                rows.append({
+                    "source": "diary" if e["kind"] == "course_diary" else "assignment",
+                    "subject": e.get("subject", ""),
+                    "date": e.get("entry_date_text") or e.get("entry_date") or "",
+                    "iso_date": e.get("entry_date") or "",
+                    "context": (e.get("description") or "")[:120],
+                    "name": a.get("name", ""),
+                    "href": a.get("href", ""),
+                    "kind": a.get("kind", "file"),
+                })
+        # messages with attachments
+        msgs = sb.table("messages").select(
+            "subject,sender,sent_label,sent_date,attachments"
+        ).range(0, 999).execute().data or []
+        for m in msgs:
+            for a in (m.get("attachments") or []):
+                if not a.get("name") or not a.get("href"):
+                    continue
+                rows.append({
+                    "source": "message",
+                    "subject": m.get("sender", ""),
+                    "date": m.get("sent_label", "") or m.get("sent_date", ""),
+                    "iso_date": m.get("sent_date") or "",
+                    "context": (m.get("subject") or "")[:120],
+                    "name": a.get("name", ""),
+                    "href": a.get("href", ""),
+                    "kind": "file",
+                })
+
+    q = (request.args.get("q") or "").lower().strip()
+    src = request.args.get("src", "")
+    if src:
+        rows = [r for r in rows if r["source"] == src]
+    if q:
+        rows = [r for r in rows
+                if q in r["name"].lower() or q in r["context"].lower() or q in r["subject"].lower()]
+    # Sort latest first
+    rows.sort(key=lambda r: r.get("iso_date") or "", reverse=True)
+
+    # Filter UI
+    filters = ['<div class="filters">']
+    filters.append('<div class="seg">')
+    for val, lbl in [("", f"All ({len(rows)})"), ("diary", "Diary"),
+                     ("assignment", "Homework"), ("message", "Messages")]:
+        on = "on" if src == val else ""
+        qs = f"src={val}" if val else ""
+        if q: qs = (qs + f"&q={esc(q)}") if qs else f"q={esc(q)}"
+        filters.append(f'<a class="{on}" href="?{qs}">{lbl}</a>')
+    filters.append('</div>')
+    filters.append(f'<form method="get" style="flex:1; display:flex; gap:.4rem">')
+    if src: filters.append(f'<input type="hidden" name="src" value="{esc(src)}">')
+    filters.append(f'<input type="text" name="q" value="{esc(q)}" placeholder="Search filename, context, subject…" style="flex:1">')
+    filters.append('<button class="btn" type="submit">Search</button></form></div>')
+
+    if not rows:
+        body = '<div class="empty"><div class="icon">📁</div><h3>No files yet</h3><p>Files will appear here once scraped.</p></div>'
+    else:
+        body_rows = []
+        src_pill = {
+            "diary": '<span class="pill diary">DIARY</span>',
+            "assignment": '<span class="pill assign">HOMEWORK</span>',
+            "message": '<span class="pill" style="background:var(--warn-soft); color:var(--warn)">MESSAGE</span>',
+        }
+        icons = {"file": "📎", "image": "🖼", "link": "🔗"}
+        for r in rows:
+            ic = icons.get(r["kind"], "📎")
+            hue = subject_hue(r["subject"])
+            body_rows.append(
+                f'<tr>'
+                f'<td style="white-space:nowrap">{esc(r["date"])}</td>'
+                f'<td>{src_pill.get(r["source"], "")}</td>'
+                f'<td><span class="subj" style="--h:{hue}">{esc(r["subject"])}</span></td>'
+                f'<td><a class="att" href="{esc(r["href"])}" target="_blank" rel="noopener">{ic} {esc(r["name"][:80])}</a></td>'
+                f'<td class="muted-small">{esc(r["context"])}</td>'
+                f'</tr>'
+            )
+        body = (
+            '<table class="data-table"><thead><tr>'
+            '<th>Date</th><th>From</th><th>Subject</th><th>File</th><th>Context</th>'
+            '</tr></thead><tbody>' + "".join(body_rows) + '</tbody></table>'
+        )
+
+    return render("Files", "files", "".join(filters) + body, _count_summary(assignments))
 
 
 @app.route("/messages")
