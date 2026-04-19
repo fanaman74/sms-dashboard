@@ -386,17 +386,21 @@ a{color:var(--accent); text-decoration:none}
 a:hover{color:var(--accent-hover)}
 h1,h2,h3,h4{margin:0; letter-spacing:-0.02em; font-weight:600; color:var(--text)}
 
-/* layout — sidebar + main */
-.app{display:grid; grid-template-columns:var(--sidebar-w) 1fr; min-height:100vh}
-.sidebar{
-  position:sticky; top:0; height:100vh; background:var(--surface);
-  border-right:1px solid var(--border); display:flex; flex-direction:column;
-  padding:1.25rem 0.85rem 1rem;
+/* layout — top header + main */
+.app{min-height:100vh; display:flex; flex-direction:column}
+.topbar{
+  position:sticky; top:0; z-index:10; backdrop-filter:saturate(180%) blur(14px);
+  background:color-mix(in srgb, var(--bg) 85%, transparent);
+  border-bottom:1px solid var(--border);
 }
-.main{padding:1.25rem 1.75rem 3.5rem; max-width:1100px; width:100%; margin:0 auto}
+.topbar-inner{
+  max-width:1200px; margin:0 auto; padding:.9rem 1.75rem;
+  display:flex; justify-content:space-between; align-items:center; gap:1rem;
+}
+.main{padding:1.5rem 1.75rem 3.5rem; max-width:1200px; width:100%; margin:0 auto}
 
 /* brand */
-.brand{display:flex; align-items:center; gap:.65rem; padding:0 .35rem 1rem; border-bottom:1px solid var(--border); margin-bottom:.85rem}
+.brand{display:flex; align-items:center; gap:.65rem}
 .brand .logo{
   width:34px; height:34px; border-radius:10px; display:grid; place-items:center; font-size:1.15rem;
   background:linear-gradient(135deg, var(--accent), var(--accent-2)); color:#fff;
@@ -405,26 +409,30 @@ h1,h2,h3,h4{margin:0; letter-spacing:-0.02em; font-weight:600; color:var(--text)
 .brand .brand-name{font-weight:700; font-size:.95rem; letter-spacing:-0.01em}
 .brand .brand-sub{color:var(--text-muted); font-size:.72rem; font-weight:500}
 
-/* nav links */
-nav.side{display:flex; flex-direction:column; gap:1px; flex:1}
-nav.side a{
-  display:flex; align-items:center; gap:.7rem; padding:.55rem .65rem; font-size:.875rem;
-  font-weight:500; color:var(--text-muted); border-radius:var(--radius-sm); transition:all .12s;
+/* primary nav — horizontal tabs */
+nav.tabs{
+  max-width:1200px; margin:0 auto; padding:0 1.75rem;
+  display:flex; gap:.2rem; border-bottom:1px solid var(--border);
 }
-nav.side a:hover{background:var(--surface-2); color:var(--text)}
-nav.side a.active{background:var(--accent-soft); color:var(--accent)}
-nav.side a.active .ico{color:var(--accent)}
-nav.side a .ico{width:16px; height:16px; color:var(--text-soft); transition:color .12s; flex-shrink:0}
-nav.side a:hover .ico{color:var(--text)}
-nav.side a .count{
-  margin-left:auto; padding:.05rem .45rem; font-size:.7rem; font-weight:600;
+nav.tabs a{
+  display:inline-flex; align-items:center; gap:.5rem;
+  padding:.7rem .95rem; font-size:.88rem; font-weight:500; color:var(--text-muted);
+  border-bottom:2px solid transparent; margin-bottom:-1px; transition:all .12s;
+  white-space:nowrap;
+}
+nav.tabs a:hover{color:var(--text)}
+nav.tabs a.active{color:var(--accent); border-bottom-color:var(--accent)}
+nav.tabs a.active .ico{color:var(--accent)}
+nav.tabs a .ico{width:15px; height:15px; color:var(--text-soft); transition:color .12s; flex-shrink:0}
+nav.tabs a:hover .ico{color:var(--text)}
+nav.tabs a .count{
+  margin-left:.25rem; padding:.05rem .45rem; font-size:.7rem; font-weight:600;
   background:var(--surface-2); border-radius:999px; color:var(--text-muted); min-width:22px; text-align:center;
 }
-nav.side a.active .count{background:var(--accent); color:#fff}
+nav.tabs a.active .count{background:var(--accent); color:#fff}
 
-/* sidebar footer */
-.side-footer{border-top:1px solid var(--border); padding-top:.7rem; margin-top:.4rem}
-.status-line{display:flex; align-items:center; gap:.45rem; font-size:.75rem; color:var(--text-muted); padding:.3rem .6rem; margin-bottom:.5rem}
+/* status pill in topbar */
+.topbar-status{display:flex; align-items:center; gap:.5rem; font-size:.8rem; color:var(--text-muted)}
 .status-dot{width:7px; height:7px; border-radius:50%; background:var(--ok); flex-shrink:0}
 .status-dot.running{background:var(--warn); animation:pulse 1.4s ease-in-out infinite}
 @keyframes pulse{0%,100%{opacity:1} 50%{opacity:.35}}
@@ -631,17 +639,13 @@ nav.side a.active .count{background:var(--accent); color:#fff}
 
 /* responsive */
 @media (max-width:840px){
-  .app{grid-template-columns:1fr}
-  .sidebar{
-    position:fixed; bottom:0; left:0; right:0; top:auto; height:auto; z-index:20;
-    flex-direction:row; padding:.4rem .5rem; border-top:1px solid var(--border); border-right:0;
-    box-shadow:var(--shadow-lg);
-  }
-  .brand, .side-footer, .status-line{display:none}
-  nav.side{flex-direction:row; justify-content:space-around; overflow-x:auto; gap:.1rem}
-  nav.side a{flex-direction:column; gap:.15rem; padding:.4rem .5rem; font-size:.68rem; text-align:center; flex:1; min-width:0}
-  nav.side a .count{margin-left:0; font-size:.65rem; padding:0 .3rem}
-  .main{padding:1rem 1rem 5rem}
+  .topbar-inner{padding:.7rem 1rem}
+  .brand .brand-sub, .topbar-status span{display:none}
+  nav.tabs{padding:0 .6rem; overflow-x:auto; scrollbar-width:none}
+  nav.tabs::-webkit-scrollbar{display:none}
+  nav.tabs a{padding:.6rem .7rem; font-size:.82rem}
+  nav.tabs a span:not(.count){display:inline}
+  .main{padding:1.25rem 1rem 3rem}
   .page-head h1{font-size:1.35rem}
   .stats{grid-template-columns:repeat(auto-fit, minmax(108px, 1fr))}
   .card{grid-template-columns:auto 1fr; gap:.65rem}
@@ -660,66 +664,66 @@ SHELL = """
 </head><body>
 
 <div class="app">
-  <aside class="sidebar">
-    <div class="brand">
-      <div class="logo">📚</div>
-      <div>
-        <div class="brand-name">SMS</div>
-        <div class="brand-sub">Philippe · B4 S5</div>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="brand">
+        <div class="logo">📚</div>
+        <div>
+          <div class="brand-name">SMS Dashboard</div>
+          <div class="brand-sub">Philippe · Bruxelles IV · S5 ENC</div>
+        </div>
+      </div>
+      <div style="display:flex; align-items:center; gap:.9rem">
+        <div class="topbar-status">
+          <span class="status-dot {% if scraping %}running{% endif %}"></span>
+          <span>{% if scraping %}Scraping…{% elif last_run %}Updated {{ last_run }}{% else %}No data yet{% endif %}</span>
+        </div>
+        <form class="inline" action="{{ url_for('scrape_now') }}" method="post">
+          <button class="btn" {% if scraping %}disabled{% endif %}>
+            {% if scraping %}
+              <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              Running
+            {% else %}
+              <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+              Refresh
+            {% endif %}
+          </button>
+        </form>
       </div>
     </div>
-
-    <nav class="side">
-      <a href="{{ url_for('home') }}" class="{% if view=='home' %}active{% endif %}" title="Homework">
+    <nav class="tabs">
+      <a href="{{ url_for('home') }}" class="{% if view=='home' %}active{% endif %}">
         <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
         <span>Homework</span>
         {% if counts.upcoming %}<span class="count">{{ counts.upcoming }}</span>{% endif %}
       </a>
-      <a href="{{ url_for('messages_view') }}" class="{% if view=='messages' %}active{% endif %}" title="Messages">
+      <a href="{{ url_for('messages_view') }}" class="{% if view=='messages' %}active{% endif %}">
         <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
         <span>Messages</span>
         {% if unread %}<span class="count">{{ unread }}</span>{% endif %}
       </a>
-      <a href="{{ url_for('diary_view') }}" class="{% if view=='diary' %}active{% endif %}" title="Course Diary">
+      <a href="{{ url_for('diary_view') }}" class="{% if view=='diary' %}active{% endif %}">
         <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
         <span>Course Diary</span>
       </a>
-      <a href="{{ url_for('schedule_view') }}" class="{% if view=='schedule' %}active{% endif %}" title="Schedule">
+      <a href="{{ url_for('schedule_view') }}" class="{% if view=='schedule' %}active{% endif %}">
         <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
         <span>Schedule</span>
       </a>
-      <a href="{{ url_for('grades_view') }}" class="{% if view=='grades' %}active{% endif %}" title="Grades">
+      <a href="{{ url_for('grades_view') }}" class="{% if view=='grades' %}active{% endif %}">
         <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2z"/></svg>
         <span>Grades</span>
       </a>
-      <a href="{{ url_for('files_view') }}" class="{% if view=='files' %}active{% endif %}" title="Files">
+      <a href="{{ url_for('files_view') }}" class="{% if view=='files' %}active{% endif %}">
         <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
         <span>Files</span>
       </a>
-      <a href="{{ url_for('tests_view') }}" class="{% if view=='tests' %}active{% endif %}" title="Exercises">
+      <a href="{{ url_for('tests_view') }}" class="{% if view=='tests' %}active{% endif %}">
         <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
         <span>Exercises</span>
       </a>
     </nav>
-
-    <div class="side-footer">
-      <div class="status-line">
-        <span class="status-dot {% if scraping %}running{% endif %}"></span>
-        <span>{% if scraping %}Scraping…{% elif last_run %}Updated {{ last_run }}{% else %}No data yet{% endif %}</span>
-      </div>
-      <form class="inline" action="{{ url_for('scrape_now') }}" method="post" style="display:block; padding:0 .25rem">
-        <button class="btn ghost sm" {% if scraping %}disabled{% endif %} style="width:100%; justify-content:center">
-          {% if scraping %}
-            <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-            Running
-          {% else %}
-            <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
-            Refresh
-          {% endif %}
-        </button>
-      </form>
-    </div>
-  </aside>
+  </header>
 
   <main class="main">
     {% if flash %}<div class="toast {% if flash_cls=='err' %}err{% endif %}">{{ flash }}</div>{% endif %}
