@@ -1,0 +1,8 @@
+flask>=3.0
+gunicorn>=21.2
+python-dotenv>=1.0
+pandas>=2.0
+requests>=2.31
+schedule>=1.2
+playwright>=1.40
+openpyxl>=3.1

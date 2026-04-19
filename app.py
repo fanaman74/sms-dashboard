@@ -753,4 +753,7 @@ def api_status():
 
 
 if __name__ == "__main__":
-    app.run(host="127.0.0.1", port=5055, debug=False)
+    import os
+    port = int(os.environ.get("PORT", 5055))
+    host = "0.0.0.0" if os.environ.get("PORT") else "127.0.0.1"
+    app.run(host=host, port=port, debug=False)
