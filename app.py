@@ -595,18 +595,11 @@ SHELL = """
         </div>
       </div>
     </div>
-    {% if cloud_mode %}
-      <div class="brand-sub" style="text-align:right">
-        Scraping runs locally &amp; pushes here<br>
-        <small>via launchd @ 09:00 · 17:00</small>
-      </div>
-    {% else %}
     <form class="inline" action="{{ url_for('scrape_now') }}" method="post">
       <button class="btn" {% if scraping %}disabled{% endif %}>
         {% if scraping %}⏳ Running…{% else %}🔄 Refresh now{% endif %}
       </button>
     </form>
-    {% endif %}
   </div>
 
   {% if flash %}<div class="toast {% if flash_cls=='err' %}err{% endif %}">{{ flash }}</div>{% endif %}
@@ -639,18 +632,24 @@ SHELL = """
 </div>
 
 <script>
-// auto-poll for scrape completion, refresh page when done
+// poll status; reload when a run completes
 (function(){
-  const running = {{ 'true' if scraping else 'false' }};
-  if(!running) return;
   let tries = 0;
+  let wasRunning = {{ 'true' if scraping else 'false' }};
   const poll = () => {
     fetch('/api/status').then(r=>r.json()).then(s=>{
-      if(!s.scraping){ location.reload(); }
-      else if(++tries < 120){ setTimeout(poll, 2000); }
-    }).catch(()=>setTimeout(poll, 4000));
+      if (s.scraping) {
+        wasRunning = true;
+        if (++tries < 180) setTimeout(poll, 5000);
+      } else if (wasRunning) {
+        location.reload();
+      } else if (++tries < 12) {
+        // not running yet but user just clicked — check a few more times
+        setTimeout(poll, 3000);
+      }
+    }).catch(()=>setTimeout(poll, 6000));
   };
-  setTimeout(poll, 2000);
+  setTimeout(poll, 3000);
 })();
 // enhance note inputs: save on blur via fetch, no redirect
 document.querySelectorAll('.note-input').forEach(i => {
@@ -680,11 +679,19 @@ document.querySelectorAll('.check').forEach(b => {
 
 
 def render(title, view, body, counts=None, show_stats=False, flash=None, flash_cls="ok"):
+    scraping = _scrape_lock.locked()
+    if CLOUD_MODE and not scraping:
+        try:
+            run = _gh_latest_run()
+            if run.get("status") in ("queued", "in_progress"):
+                scraping = True
+        except Exception:
+            pass
     return render_template_string(
         SHELL, title=title, view=view, body=body, css=BASE_CSS,
         counts=counts or {"upcoming": 0, "today": 0, "week": 0, "total": 0, "done": 0,
                           "overdue": 0, "tests_week": 0},
-        show_stats=show_stats, scraping=_scrape_lock.locked(), last_run=_last_run(),
+        show_stats=show_stats, scraping=scraping, last_run=_last_run(),
         student="ANAMAN, Philippe · Bruxelles IV",
         flash=flash, flash_cls=flash_cls,
         cloud_mode=CLOUD_MODE,
@@ -1143,15 +1150,71 @@ def _run_scrape_bg():
         _last_scrape["finished"] = datetime.now().isoformat(timespec="seconds")
 
 
+GITHUB_TOKEN = _os.environ.get("GITHUB_TOKEN", "").strip()
+GITHUB_REPO = _os.environ.get("GITHUB_REPO", "fanaman74/sms-dashboard").strip()
+GITHUB_WORKFLOW = _os.environ.get("GITHUB_WORKFLOW", "scrape.yml").strip()
+
+
+def _gh_trigger_run() -> tuple[bool, str]:
+    """Dispatch the scrape workflow on GitHub Actions."""
+    import requests as _rq
+    if not GITHUB_TOKEN:
+        return False, "GITHUB_TOKEN not configured"
+    try:
+        r = _rq.post(
+            f"https://api.github.com/repos/{GITHUB_REPO}/actions/workflows/{GITHUB_WORKFLOW}/dispatches",
+            headers={
+                "Authorization": f"Bearer {GITHUB_TOKEN}",
+                "Accept": "application/vnd.github+json",
+                "X-GitHub-Api-Version": "2022-11-28",
+            },
+            json={"ref": "main"},
+            timeout=15,
+        )
+        if r.status_code == 204:
+            return True, "dispatched"
+        return False, f"{r.status_code}: {r.text[:200]}"
+    except Exception as e:
+        return False, str(e)
+
+
+def _gh_latest_run() -> dict:
+    import requests as _rq
+    if not GITHUB_TOKEN:
+        return {}
+    try:
+        r = _rq.get(
+            f"https://api.github.com/repos/{GITHUB_REPO}/actions/workflows/{GITHUB_WORKFLOW}/runs",
+            headers={
+                "Authorization": f"Bearer {GITHUB_TOKEN}",
+                "Accept": "application/vnd.github+json",
+            },
+            params={"per_page": 1},
+            timeout=10,
+        )
+        data = r.json()
+        runs = data.get("workflow_runs") or []
+        if not runs:
+            return {}
+        run = runs[0]
+        return {
+            "id": run.get("id"),
+            "status": run.get("status"),
+            "conclusion": run.get("conclusion"),
+            "html_url": run.get("html_url"),
+            "created_at": run.get("created_at"),
+        }
+    except Exception:
+        return {}
+
+
 @app.post("/scrape-now")
 def scrape_now():
     if CLOUD_MODE:
-        return redirect(url_for(
-            "home",
-            flash="Scraping runs on your local machine (launchd at 09:00 + 17:00). "
-                  "It pushes to this cloud instance automatically.",
-            cls="err",
-        ))
+        ok, msg = _gh_trigger_run()
+        if ok:
+            return redirect(url_for("home", flash="GitHub Actions scrape started — refresh in ~2 min.", cls="ok"))
+        return redirect(url_for("home", flash=f"Could not trigger: {msg}", cls="err"))
     if _scrape_lock.locked():
         return redirect(url_for("home", flash="Scrape already running", cls="err"))
     threading.Thread(target=_run_scrape_bg, daemon=True).start()
@@ -1190,7 +1253,18 @@ def api_ingest():
 
 @app.get("/api/status")
 def api_status():
-    return jsonify({"scraping": _scrape_lock.locked(), **_last_scrape})
+    if CLOUD_MODE:
+        run = _gh_latest_run()
+        running = run.get("status") in ("queued", "in_progress")
+        return jsonify({
+            "scraping": running,
+            "source": "github_actions",
+            "status": run.get("status"),
+            "conclusion": run.get("conclusion"),
+            "html_url": run.get("html_url"),
+            "started": run.get("created_at"),
+        })
+    return jsonify({"scraping": _scrape_lock.locked(), "source": "local", **_last_scrape})
 
 
 if __name__ == "__main__":
