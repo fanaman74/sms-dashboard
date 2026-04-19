@@ -1,0 +1,25 @@
+# secrets
+.env
+session.json
+
+# python
+venv/
+__pycache__/
+*.pyc
+
+# runtime artifacts
+output/
+screenshots/
+api_responses/
+
+# inspection dumps
+api_calls.log
+all_links.txt
+homework_page_html.txt
+login_page_html.txt
+dom_*.html
+text_*.txt
+
+# local tooling
+.claude/
+.DS_Store
