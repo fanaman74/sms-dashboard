@@ -9,6 +9,14 @@ from pathlib import Path
 
 from flask import Flask, jsonify, redirect, render_template_string, request, url_for
 
+try:
+    from dotenv import load_dotenv as _ld
+    _ld()
+except Exception:
+    pass
+
+import db as _db
+
 ROOT = Path(__file__).parent
 OUT = ROOT / "output"
 OUT.mkdir(exist_ok=True)
@@ -35,6 +43,7 @@ def load_json(name, default):
 
 
 def load_state():
+    """Legacy JSON state (kept as fallback if Supabase is unreachable)."""
     if not STATE.exists():
         return {"done": {}, "notes": {}}
     try:
@@ -45,6 +54,9 @@ def load_state():
 
 def save_state(s):
     STATE.write_text(json.dumps(s, indent=2, ensure_ascii=False))
+
+
+USE_SUPABASE = _db.get_client() is not None
 
 
 def parse_date(s):
@@ -81,14 +93,108 @@ def _neg_iso(iso: str) -> str:
     return iso.translate(trans)
 
 
-def load_all():
+def _load_from_json(today):
     state = load_state()
-    today = date.today()
     assignments = enrich(load_json("homework.json", []), state, today)
     diary = enrich(load_json("course_diary.json", []), state, today)
     tests = load_json("tests.json", [])
     schedule = load_json("schedule.json", [])
     summary = load_json("summary.json", {})
+    # continue with the same sort logic below (returns tuple via caller path)
+    def _sort_key(x):
+        iso = x["iso_date"]
+        if not iso:
+            return (2, "")
+        if x["is_upcoming"] or x["is_overdue"]:
+            return (0, iso)
+        return (1, _neg_iso(iso))
+    assignments.sort(key=_sort_key)
+    diary.sort(key=lambda x: (x["iso_date"] == "", x["iso_date"]), reverse=True)
+    diary.sort(key=lambda x: x["iso_date"] == "")
+    return assignments, diary, tests, schedule, summary
+
+
+def _db_row_to_entry(row: dict) -> dict:
+    """Map a row from entries_with_state view to the dict shape the UI expects."""
+    raw_date = row.get("entry_date_text") or ""
+    if not raw_date and row.get("entry_date"):
+        try:
+            raw_date = datetime.strptime(row["entry_date"], "%Y-%m-%d").strftime("%d/%m/%Y")
+        except Exception:
+            raw_date = row["entry_date"]
+    return {
+        "key": row.get("entry_key"),
+        "subject": row.get("subject") or "",
+        "date": raw_date,
+        "type": row.get("entry_type") or "",
+        "description": row.get("description") or "",
+        "attachments": row.get("attachments") or [],
+        "_done_from_db": row.get("done", False),
+        "_note_from_db": row.get("note", ""),
+    }
+
+
+def _db_row_to_test(row: dict) -> dict:
+    d = row.get("test_date")
+    raw = ""
+    if d:
+        try:
+            raw = datetime.strptime(d, "%Y-%m-%d").strftime("%d/%m/%Y")
+        except Exception:
+            raw = d
+    return {
+        "date": raw,
+        "subject": row.get("subject", ""),
+        "test_type": row.get("test_type", ""),
+        "description": row.get("description", ""),
+        "weight": row.get("weight", ""),
+        "grade": row.get("grade", ""),
+    }
+
+
+def _db_row_to_sched(row: dict) -> dict:
+    return {
+        "start": row.get("start_time", ""),
+        "title": row.get("title", ""),
+        "text": row.get("details", ""),
+    }
+
+
+def _enrich_db(items, today):
+    """Like enrich() but pulls done/note from the row itself."""
+    out = []
+    for it in items:
+        d = parse_date(it.get("date", ""))
+        days = (d - today).days if d else None
+        done = bool(it.get("_done_from_db"))
+        out.append({
+            **it,
+            "iso_date": d.isoformat() if d else "",
+            "weekday": d.strftime("%a") if d else "",
+            "pretty_date": d.strftime("%a %d %b") if d else it.get("date", ""),
+            "days_until": days,
+            "is_upcoming": d is not None and d >= today,
+            "is_today": d == today,
+            "is_overdue": d is not None and d < today and not done,
+            "done": done,
+            "note": it.get("_note_from_db") or "",
+        })
+    return out
+
+
+def load_all():
+    today = date.today()
+    if USE_SUPABASE:
+        try:
+            rows = _db.fetch_entries()
+            assignments = _enrich_db([_db_row_to_entry(r) for r in rows if r.get("kind") == "assignment"], today)
+            diary = _enrich_db([_db_row_to_entry(r) for r in rows if r.get("kind") == "course_diary"], today)
+            tests = [_db_row_to_test(r) for r in _db.fetch_tests()]
+            schedule = [_db_row_to_sched(r) for r in _db.fetch_schedule()]
+            summary = {}
+        except Exception as e:
+            print(f"[!] Supabase read failed, falling back to JSON: {e}")
+            return _load_from_json(today)
     # Upcoming first (soonest due date at top), then past items most-recent first, undated last.
     def _sort_key(x):
         iso = x["iso_date"]
@@ -715,18 +821,29 @@ def tests_view():
 @app.post("/toggle-done")
 def toggle_done():
     key = request.form.get("key", "")
+    if USE_SUPABASE:
+        try:
+            new_val = _db.toggle_done(key)
+            return jsonify(ok=True, done=new_val)
+        except Exception as e:
+            print(f"[!] Supabase toggle_done failed: {e}")
+    # fallback
     s = load_state()
     s["done"][key] = not s["done"].get(key, False)
     save_state(s)
-    if request.headers.get("X-Requested-With") or "fetch" in request.headers.get("Accept", "").lower():
-        return jsonify(ok=True, done=s["done"][key])
-    return redirect(request.referrer or url_for("home"))
+    return jsonify(ok=True, done=s["done"][key])
 
 
 @app.post("/set-note")
 def set_note():
     key = request.form.get("key", "")
     note = request.form.get("note", "").strip()
+    if USE_SUPABASE:
+        try:
+            _db.set_note(key, note)
+            return jsonify(ok=True)
+        except Exception as e:
+            print(f"[!] Supabase set_note failed: {e}")
     s = load_state()
     if note:
         s["notes"][key] = note

@@ -13,6 +13,8 @@ import requests
 from dotenv import load_dotenv
 from playwright.async_api import async_playwright
 
+import db as _db  # Supabase helpers
+
 load_dotenv()
 USERNAME = os.getenv("SMS_USERNAME")
 PASSWORD = os.getenv("SMS_PASSWORD")
@@ -275,6 +277,71 @@ def send_ha(payload: dict):
         print(f"[!] HA webhook failed: {e}")
 
 
+def _iso_date(ddmmyyyy: str) -> str | None:
+    try:
+        return datetime.strptime(ddmmyyyy, "%d/%m/%Y").date().isoformat()
+    except Exception:
+        return None
+
+
+def _entry_row(e: dict, kind: str) -> dict:
+    return {
+        "entry_key": e["key"],
+        "kind": kind,
+        "subject": e.get("subject", ""),
+        "entry_date": _iso_date(e.get("date", "")),
+        "entry_date_text": e.get("date", ""),
+        "entry_type": e.get("type", ""),
+        "description": e.get("description", ""),
+        "attachments": e.get("attachments") or [],
+        "html": e.get("html"),
+        "last_seen": datetime.now(tz=None).isoformat(),
+    }
+
+
+def _test_key(t: dict) -> str:
+    raw = f"{t.get('subject','')}|{t.get('date','')}|{t.get('description','')}"
+    return hashlib.sha1(raw.encode("utf-8")).hexdigest()[:16]
+
+
+def _sched_key(s: dict) -> str:
+    raw = f"{s.get('start','')}|{s.get('title','')}|{s.get('text','')}"
+    return hashlib.sha1(raw.encode("utf-8")).hexdigest()[:16]
+
+
+def push_to_supabase(diary, assignments, grades, schedule):
+    if _db.get_client() is None:
+        print("[*] Supabase not configured — skipping cloud sync.")
+        return
+    try:
+        entry_rows = [_entry_row(e, "course_diary") for e in diary] + \
+                     [_entry_row(e, "assignment") for e in assignments]
+        n_e = _db.upsert_entries(entry_rows)
+
+        test_rows = [{
+            "test_key": _test_key(t),
+            "test_date": _iso_date(t.get("date", "")),
+            "subject": t.get("subject", ""),
+            "test_type": t.get("test_type", ""),
+            "description": t.get("description", ""),
+            "weight": t.get("weight", ""),
+            "grade": t.get("grade", ""),
+        } for t in grades]
+        n_t = _db.upsert_tests(test_rows)
+
+        sched_rows = [{
+            "schedule_key": _sched_key(s),
+            "start_time": s.get("start", ""),
+            "title": s.get("title", ""),
+            "details": s.get("text", ""),
+        } for s in schedule]
+        n_s = _db.upsert_schedule(sched_rows)
+
+        print(f"[*] Supabase: entries={n_e} tests={n_t} schedule={n_s}")
+    except Exception as e:
+        print(f"[!] Supabase sync failed: {e}")
+
+
 def push_to_cloud(diary, assignments, grades, schedule, summary):
     if not INGEST_URL or not INGEST_TOKEN:
         return
@@ -361,6 +428,21 @@ async def run():
         if HA_WEBHOOK:
             send_ha(summary)
 
+        # Primary sync: Supabase
+        push_to_supabase(diary, assignments, grades, schedule)
+        try:
+            _db.record_run(
+                assignments_count=len(assignments),
+                diary_count=len(diary),
+                tests_count=len(grades),
+                schedule_count=len(schedule),
+                new_items_count=len(new_items),
+                source="launchd",
+            )
+        except Exception as e:
+            print(f"[!] record_run failed: {e}")
+
+        # Legacy fallback: push JSON bundle to /api/ingest if still configured
         push_to_cloud(diary, assignments, grades, schedule, summary)
 
         await context.storage_state(path=str(SESSION_FILE))
