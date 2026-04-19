@@ -50,24 +50,69 @@ def log_run(msg: str):
 async def ensure_logged_in(context, page):
     """Try using stored session; fall back to login."""
     await page.goto(URL_DASHBOARD, wait_until="domcontentloaded", timeout=20000)
-    if "login" in page.url.lower():
-        print("[*] Session invalid, logging in...")
-        await page.goto(URL_LOGIN, wait_until="networkidle")
-        await page.fill(
-            'input[type="email"], input[name*="user" i], input[name*="email" i]',
-            USERNAME,
-        )
-        await page.fill('input[type="password"]', PASSWORD)
-        await page.click(
-            'button[type="submit"], input[type="submit"]'
-        )
-        await page.wait_for_load_state("networkidle", timeout=20000)
-        if "login" in page.url.lower():
-            raise RuntimeError("Login failed — check credentials in .env")
-        await context.storage_state(path=str(SESSION_FILE))
-        print("[*] Login OK, session saved.")
-    else:
+    if "login" not in page.url.lower():
         print("[*] Session still valid.")
+        return
+
+    print(f"[*] Session invalid (at {page.url}), logging in...")
+    await page.goto(URL_LOGIN, wait_until="networkidle", timeout=30000)
+    await asyncio.sleep(1.5)
+
+    # Fill credentials — tolerate a variety of input shapes
+    try:
+        await page.fill(
+            'input[type="email"], input[name*="user" i], input[name*="email" i], '
+            'input[id*="user" i], input[id*="email" i]',
+            USERNAME,
+            timeout=10000,
+        )
+    except Exception as e:
+        # dump for debugging
+        try:
+            await page.screenshot(path="screenshots/login_fail_form.png", full_page=True)
+            Path("login_page_html.txt").write_text(await page.content())
+        except Exception:
+            pass
+        raise RuntimeError(f"Could not locate username field: {e}")
+
+    await page.fill('input[type="password"]', PASSWORD)
+    await asyncio.sleep(0.5)
+    await page.click(
+        'button[type="submit"], input[type="submit"], '
+        'button:has-text("Login"), button:has-text("Sign in"), '
+        'button:has-text("Connexion"), button:has-text("Anmelden")'
+    )
+
+    # Wait up to 30s for URL to move off /login OR for a dashboard marker
+    for _ in range(30):
+        await asyncio.sleep(1)
+        if "login" not in page.url.lower():
+            break
+        try:
+            found = await page.locator('.current-student-select, #diary_container, .nav-sidebar').count()
+            if found:
+                break
+        except Exception:
+            pass
+    else:
+        # Capture diagnostics for failure
+        try:
+            (OUT).mkdir(exist_ok=True)
+            await page.screenshot(path=str(OUT / "login_fail.png"), full_page=True)
+            (OUT / "login_fail.html").write_text(await page.content())
+            print(f"[!] Post-login URL: {page.url}")
+            # grab any visible error text
+            try:
+                err = await page.eval_on_selector("body", "e => e.innerText")
+                print(f"[!] Body text (head): {err[:600]}")
+            except Exception:
+                pass
+        except Exception:
+            pass
+        raise RuntimeError("Login failed — page didn't leave /login within 30s")
+
+    await context.storage_state(path=str(SESSION_FILE))
+    print(f"[*] Login OK, landed at {page.url}")
 
 
 async def extract_diary_entries(page, kind: str):
@@ -572,7 +617,15 @@ def next_due(items):
 async def run():
     async with async_playwright() as p:
         browser = await p.chromium.launch(headless=True)
-        ctx_args = {"storage_state": str(SESSION_FILE)} if SESSION_FILE.exists() else {}
+        ctx_args = {
+            "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
+                          "AppleWebKit/537.36 (KHTML, like Gecko) "
+                          "Chrome/128.0.0.0 Safari/537.36",
+            "viewport": {"width": 1440, "height": 900},
+            "locale": "en-GB",
+        }
+        if SESSION_FILE.exists():
+            ctx_args["storage_state"] = str(SESSION_FILE)
         context = await browser.new_context(**ctx_args)
         page = await context.new_page()
 
