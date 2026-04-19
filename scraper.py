@@ -17,6 +17,8 @@ load_dotenv()
 USERNAME = os.getenv("SMS_USERNAME")
 PASSWORD = os.getenv("SMS_PASSWORD")
 HA_WEBHOOK = (os.getenv("HA_WEBHOOK_URL") or "").strip()
+INGEST_URL = (os.getenv("INGEST_URL") or "").strip()
+INGEST_TOKEN = (os.getenv("INGEST_TOKEN") or "").strip()
 
 ROOT = Path(__file__).parent
 OUT = ROOT / "output"
@@ -273,6 +275,31 @@ def send_ha(payload: dict):
         print(f"[!] HA webhook failed: {e}")
 
 
+def push_to_cloud(diary, assignments, grades, schedule, summary):
+    if not INGEST_URL or not INGEST_TOKEN:
+        return
+    bundle = {
+        "homework.json": assignments,
+        "course_diary.json": diary,
+        "tests.json": grades,
+        "schedule.json": schedule,
+        "summary.json": summary,
+    }
+    try:
+        r = requests.post(
+            INGEST_URL,
+            json=bundle,
+            headers={"X-Ingest-Token": INGEST_TOKEN, "Content-Type": "application/json"},
+            timeout=30,
+        )
+        if r.status_code == 200:
+            print(f"[*] Pushed to cloud → {r.json().get('written')}")
+        else:
+            print(f"[!] Cloud push failed: {r.status_code} {r.text[:200]}")
+    except Exception as e:
+        print(f"[!] Cloud push error: {e}")
+
+
 def next_due(items):
     dates = []
     today = datetime.today().date()
@@ -333,6 +360,8 @@ async def run():
 
         if HA_WEBHOOK:
             send_ha(summary)
+
+        push_to_cloud(diary, assignments, grades, schedule, summary)
 
         await context.storage_state(path=str(SESSION_FILE))
         await browser.close()

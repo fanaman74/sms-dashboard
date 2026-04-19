@@ -11,7 +11,12 @@ from flask import Flask, jsonify, redirect, render_template_string, request, url
 
 ROOT = Path(__file__).parent
 OUT = ROOT / "output"
+OUT.mkdir(exist_ok=True)
 STATE = OUT / "_ui_state.json"
+
+import os as _os
+CLOUD_MODE = bool(_os.environ.get("PORT"))  # Railway/Heroku set PORT
+INGEST_TOKEN = _os.environ.get("INGEST_TOKEN", "")
 
 app = Flask(__name__)
 _scrape_lock = threading.Lock()
@@ -405,11 +410,18 @@ SHELL = """
         </div>
       </div>
     </div>
+    {% if cloud_mode %}
+      <div class="brand-sub" style="text-align:right">
+        Scraping runs locally &amp; pushes here<br>
+        <small>via launchd @ 09:00 · 17:00</small>
+      </div>
+    {% else %}
     <form class="inline" action="{{ url_for('scrape_now') }}" method="post">
       <button class="btn" {% if scraping %}disabled{% endif %}>
         {% if scraping %}⏳ Running…{% else %}🔄 Refresh now{% endif %}
       </button>
     </form>
+    {% endif %}
   </div>
 
   {% if flash %}<div class="toast {% if flash_cls=='err' %}err{% endif %}">{{ flash }}</div>{% endif %}
@@ -480,10 +492,12 @@ document.querySelectorAll('.check').forEach(b => {
 def render(title, view, body, counts=None, show_stats=False, flash=None, flash_cls="ok"):
     return render_template_string(
         SHELL, title=title, view=view, body=body, css=BASE_CSS,
-        counts=counts or {"upcoming": 0, "today": 0, "week": 0, "total": 0, "done": 0, "overdue": 0},
+        counts=counts or {"upcoming": 0, "today": 0, "week": 0, "total": 0, "done": 0,
+                          "overdue": 0, "tests_week": 0},
         show_stats=show_stats, scraping=_scrape_lock.locked(), last_run=_last_run(),
         student="ANAMAN, Philippe · Bruxelles IV",
         flash=flash, flash_cls=flash_cls,
+        cloud_mode=CLOUD_MODE,
     )
 
 
@@ -741,10 +755,47 @@ def _run_scrape_bg():
 
 @app.post("/scrape-now")
 def scrape_now():
+    if CLOUD_MODE:
+        return redirect(url_for(
+            "home",
+            flash="Scraping runs on your local machine (launchd at 09:00 + 17:00). "
+                  "It pushes to this cloud instance automatically.",
+            cls="err",
+        ))
     if _scrape_lock.locked():
         return redirect(url_for("home", flash="Scrape already running", cls="err"))
     threading.Thread(target=_run_scrape_bg, daemon=True).start()
     return redirect(url_for("home", flash="Fetching fresh data…", cls="ok"))
+
+
+@app.post("/api/ingest")
+def api_ingest():
+    """Accept a data bundle from the local scraper and overwrite output files."""
+    token = request.headers.get("X-Ingest-Token", "")
+    if not INGEST_TOKEN or token != INGEST_TOKEN:
+        return jsonify(ok=False, error="unauthorized"), 401
+    try:
+        payload = request.get_json(force=True)
+    except Exception as e:
+        return jsonify(ok=False, error=f"bad json: {e}"), 400
+    if not isinstance(payload, dict):
+        return jsonify(ok=False, error="expected object"), 400
+
+    OUT.mkdir(exist_ok=True)
+    allowed = {
+        "homework.json", "course_diary.json", "tests.json",
+        "schedule.json", "summary.json",
+    }
+    written = []
+    for name, body in payload.items():
+        if name not in allowed:
+            continue
+        (OUT / name).write_text(json.dumps(body, ensure_ascii=False, indent=2))
+        written.append(name)
+    with (OUT / "run_log.txt").open("a") as f:
+        f.write(f"[{datetime.now().isoformat(timespec='seconds')}] ingested {written} "
+                f"from {request.remote_addr}\n")
+    return jsonify(ok=True, written=written)
 
 
 @app.get("/api/status")
@@ -754,6 +805,7 @@ def api_status():
 
 if __name__ == "__main__":
     import os
-    port = int(os.environ.get("PORT", 5055))
+    port_raw = os.environ.get("PORT", "").strip() or "5055"
+    port = int(port_raw)
     host = "0.0.0.0" if os.environ.get("PORT") else "127.0.0.1"
     app.run(host=host, port=port, debug=False)
