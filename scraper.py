@@ -32,6 +32,9 @@ URL_DASHBOARD = "https://sms.eursc.eu/content/common/dashboard.php"
 URL_DIARY = "https://sms.eursc.eu/content/course_diary/course_diary_for_parents.php"
 URL_GRADES = "https://sms.eursc.eu/content/guardian/performance_sheet.php"
 URL_SCHEDULE = "https://sms.eursc.eu/content/guardian/calendar_for_parents.php"
+URL_INBOX = "https://sms.eursc.eu/announcements/inbox"
+URL_TERM_REPORTS = "https://sms.eursc.eu/content/guardian/term_reports.php"
+URL_COURSE_INFO = "https://sms.eursc.eu/content/guardian/student_info.php"
 
 
 def entry_key(subject: str, due_date: str, description: str) -> str:
@@ -208,6 +211,116 @@ async def scrape_graded_exercises(page):
     return out
 
 
+async def scrape_inbox(page):
+    print("[*] Inbox announcements...")
+    await page.goto(URL_INBOX, wait_until="networkidle", timeout=30000)
+    await asyncio.sleep(random.uniform(2, 3))
+    # Scroll a few times so ag-grid renders more rows
+    for _ in range(4):
+        await page.mouse.wheel(0, 600)
+        await asyncio.sleep(0.4)
+    msgs = await page.evaluate(r"""() => {
+        // Each row has three cells in order: sender | subject+excerpt+attachments | date
+        const out = [];
+        document.querySelectorAll('[role="row"].msm-list-view-inbox-row').forEach(row => {
+            const cells = [...row.querySelectorAll('[role="gridcell"]')];
+            if (cells.length === 0) return;
+            const sender = (cells[0]?.innerText || '').trim();
+            // Subject cell
+            const subjEl = cells[1]?.querySelector('.announcement-summary-renderer__subject');
+            const subject = subjEl?.querySelector('.msm-limit-text')?.innerText?.trim()
+                          || subjEl?.innerText?.trim() || '';
+            const excerpt = cells[1]?.querySelector('.announcement-summary-renderer__excerpt')?.innerText?.trim() || '';
+            const attaches = [...(cells[1]?.querySelectorAll('.announcement-summary-renderer__attachments a.msm-chip') || [])]
+                .map(a => ({
+                    name: a.querySelector('.msm-limit-text')?.innerText?.trim() || (a.innerText || '').trim(),
+                    href: a.href,
+                }))
+                .filter(a => a.name);
+            const sent_label = (cells[cells.length - 1]?.innerText || '').trim();
+            out.push({
+                rowId: row.getAttribute('row-id') || '',
+                unread: row.classList.contains('msm-strong'),
+                sender, subject, excerpt, sent_label,
+                attachments: attaches,
+            });
+        });
+        return out;
+    }""")
+    # Filter empty noise (some rows may not have rendered content)
+    msgs = [m for m in msgs if m.get("subject")]
+    print(f"    got {len(msgs)} messages ({sum(1 for m in msgs if m['unread'])} unread)")
+    return msgs
+
+
+async def scrape_term_reports(page):
+    print("[*] Term reports...")
+    await page.goto(URL_TERM_REPORTS, wait_until="networkidle", timeout=30000)
+    await asyncio.sleep(random.uniform(1, 2))
+    reports = await page.evaluate(r"""() => {
+        const out = [];
+        let current_year = '';
+        document.querySelectorAll('.main-content-container h3, .main-content-container a, h3, a').forEach(el => {
+            if (el.tagName === 'H3') {
+                const t = (el.textContent || '').trim();
+                if (/^year\s/i.test(t)) current_year = t;
+            } else if (el.tagName === 'A') {
+                const href = el.getAttribute('href') || '';
+                const m = href.match(/report_id=(\d+)/);
+                if (m) {
+                    out.push({
+                        report_id: m[1],
+                        label: (el.textContent || '').trim(),
+                        year_label: current_year,
+                        download_url: el.href,
+                    });
+                }
+            }
+        });
+        return out;
+    }""")
+    print(f"    got {len(reports)} term reports")
+    return reports
+
+
+async def scrape_course_info(page):
+    print("[*] Course info / teachers...")
+    await page.goto(URL_COURSE_INFO, wait_until="networkidle", timeout=30000)
+    await asyncio.sleep(random.uniform(1, 2))
+    courses = await page.evaluate(r"""() => {
+        const out = [];
+        document.querySelectorAll('.grid-wrapper').forEach(w => {
+            const code = (w.querySelector('.wrapper-label')?.textContent || '').trim();
+            if (!code) return;
+            const teachers = [];
+            w.querySelectorAll('label.form-element-label').forEach(lab => {
+                if (/teacher/i.test(lab.textContent || '')) {
+                    const span = lab.parentElement.querySelector('span.read-mode');
+                    if (!span) return;
+                    span.querySelectorAll('li').forEach(li => {
+                        const a = li.querySelector('a[href^="mailto:"]');
+                        const email = a ? a.getAttribute('href').replace(/^mailto:/,'') : '';
+                        const text = (li.textContent || '').trim();
+                        const name = text.replace(/\s*\(.*\)\s*$/, '').trim();
+                        teachers.push({ name, email });
+                    });
+                }
+            });
+            let desc = '';
+            w.querySelectorAll('label.form-element-label').forEach(lab => {
+                if (/description/i.test(lab.textContent || '')) {
+                    const span = lab.parentElement.querySelector('span.read-mode');
+                    if (span) desc = (span.innerText || '').trim();
+                }
+            });
+            out.push({ course_code: code, teachers, course_description: desc });
+        });
+        return out;
+    }""")
+    print(f"    got {len(courses)} courses")
+    return courses
+
+
 async def scrape_schedule(page):
     print("[*] Schedule (calendar all-day events)...")
     await page.goto(URL_SCHEDULE, wait_until="networkidle", timeout=30000)
@@ -342,6 +455,81 @@ def push_to_supabase(diary, assignments, grades, schedule):
         print(f"[!] Supabase sync failed: {e}")
 
 
+def _parse_sent_date(label: str) -> str | None:
+    """Parse 'April 17' / '14 April' style labels into ISO date (assumes current year)."""
+    if not label:
+        return None
+    label = label.strip()
+    now = datetime.now()
+    months_en = {m.lower(): i for i, m in enumerate(
+        ["January","February","March","April","May","June",
+         "July","August","September","October","November","December"], start=1)}
+    # Try "Month Day" then "Day Month"
+    import re as _re
+    m = _re.match(r"^([A-Za-z]+)\s+(\d{1,2})$", label)
+    if m and m.group(1).lower() in months_en:
+        mo = months_en[m.group(1).lower()]; day = int(m.group(2))
+    else:
+        m = _re.match(r"^(\d{1,2})\s+([A-Za-z]+)$", label)
+        if m and m.group(2).lower() in months_en:
+            day = int(m.group(1)); mo = months_en[m.group(2).lower()]
+        else:
+            return None
+    year = now.year
+    # If derived date would be in the future by more than a month, assume previous year
+    try:
+        d = datetime(year, mo, day)
+        if (d - now).days > 30:
+            d = datetime(year - 1, mo, day)
+        return d.date().isoformat()
+    except Exception:
+        return None
+
+
+def _message_key(m: dict) -> str:
+    raw = f"{m.get('sender','')}|{m.get('sent_label','')}|{m.get('subject','')}"
+    return hashlib.sha1(raw.encode("utf-8")).hexdigest()[:20]
+
+
+def push_extras_to_supabase(messages, term_reports, course_info):
+    if _db.get_client() is None:
+        return
+    try:
+        msg_rows = []
+        for m in messages:
+            msg_rows.append({
+                "message_key": _message_key(m),
+                "subject": m.get("subject", ""),
+                "sender": m.get("sender", ""),
+                "excerpt": m.get("excerpt", ""),
+                "sent_label": m.get("sent_label", ""),
+                "sent_date": _parse_sent_date(m.get("sent_label", "")),
+                "attachments": m.get("attachments") or [],
+                "unread": bool(m.get("unread", False)),
+                "last_seen": datetime.now().isoformat(),
+            })
+        n_m = _db.upsert_messages(msg_rows)
+
+        report_rows = [{
+            "report_id": r["report_id"],
+            "label": r.get("label", ""),
+            "year_label": r.get("year_label", ""),
+            "download_url": r.get("download_url", ""),
+        } for r in term_reports]
+        n_r = _db.upsert_term_reports(report_rows)
+
+        course_rows = [{
+            "course_code": c["course_code"],
+            "teachers": c.get("teachers") or [],
+            "course_description": c.get("course_description") or "",
+        } for c in course_info if c.get("course_code")]
+        n_c = _db.upsert_courses(course_rows)
+
+        print(f"[*] Supabase extras: messages={n_m} term_reports={n_r} courses={n_c}")
+    except Exception as e:
+        print(f"[!] Supabase extras sync failed: {e}")
+
+
 def push_to_cloud(diary, assignments, grades, schedule, summary):
     if not INGEST_URL or not INGEST_TOKEN:
         return
@@ -396,8 +584,30 @@ async def run():
         grades = await scrape_graded_exercises(page)
         await asyncio.sleep(random.uniform(1, 2))
         schedule = await scrape_schedule(page)
+        await asyncio.sleep(random.uniform(1, 2))
+        try:
+            messages = await scrape_inbox(page)
+        except Exception as e:
+            print(f"[!] inbox scrape failed: {e}")
+            messages = []
+        await asyncio.sleep(random.uniform(1, 2))
+        try:
+            term_reports = await scrape_term_reports(page)
+        except Exception as e:
+            print(f"[!] term_reports scrape failed: {e}")
+            term_reports = []
+        await asyncio.sleep(random.uniform(1, 2))
+        try:
+            course_info = await scrape_course_info(page)
+        except Exception as e:
+            print(f"[!] course_info scrape failed: {e}")
+            course_info = []
 
         save_outputs(diary, assignments, grades, schedule)
+        # Save extras as JSON backups too
+        (OUT / "messages.json").write_text(json.dumps(messages, indent=2, ensure_ascii=False))
+        (OUT / "term_reports.json").write_text(json.dumps(term_reports, indent=2, ensure_ascii=False))
+        (OUT / "courses.json").write_text(json.dumps(course_info, indent=2, ensure_ascii=False))
 
         # Track new items across runs using assignment keys
         keys_path = OUT / "_prev_keys.json"
@@ -430,6 +640,7 @@ async def run():
 
         # Primary sync: Supabase
         push_to_supabase(diary, assignments, grades, schedule)
+        push_extras_to_supabase(messages, term_reports, course_info)
         try:
             _db.record_run(
                 assignments_count=len(assignments),

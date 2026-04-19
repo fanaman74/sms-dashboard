@@ -211,6 +211,46 @@ def load_all():
 
 # ---------- helpers ----------
 
+def _courses_cached():
+    """Cached { course_code: {teachers, description} } for UI enrichment."""
+    global _COURSES_CACHE
+    try:
+        if _COURSES_CACHE is None:
+            _COURSES_CACHE = _db.fetch_courses() if USE_SUPABASE else {}
+    except Exception:
+        _COURSES_CACHE = {}
+    return _COURSES_CACHE
+
+
+_COURSES_CACHE = None
+
+
+def teacher_label(subject_code: str) -> str:
+    c = _courses_cached().get(subject_code)
+    if not c:
+        return ""
+    tchs = c.get("teachers") or []
+    if not tchs:
+        return ""
+    first = tchs[0]
+    name = first.get("name", "")
+    # Keep last name only for compact display
+    parts = name.replace(",", "").split()
+    short = parts[-1] if parts else name
+    if len(tchs) > 1:
+        short = f"{short} +{len(tchs)-1}"
+    return short
+
+
+def unread_message_count() -> int:
+    if not USE_SUPABASE:
+        return 0
+    try:
+        return _db.get_client().table("messages").select("id", count="exact").eq("unread", True).limit(1).execute().count or 0
+    except Exception:
+        return 0
+
+
 def _count_summary(assignments):
     in_week = lambda a: a["days_until"] is not None and 0 <= a["days_until"] <= 7 and not a["done"]
     return {
@@ -413,6 +453,33 @@ nav.tabs a.active .count{background:var(--accent); color:#fff}
   padding:.15rem .5rem; border-radius:999px; letter-spacing:.02em;
   background:hsl(var(--h) 75% 94%); color:hsl(var(--h) 60% 32%);
 }
+.teacher{font-size:.78rem; color:var(--text-muted); font-weight:500}
+
+/* messages */
+.msg-card{
+  background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+  padding:.85rem 1rem; box-shadow:var(--shadow-sm); transition:border-color .15s, box-shadow .15s;
+}
+.msg-card:hover{border-color:var(--border-strong); box-shadow:var(--shadow-md)}
+.msg-card.unread{border-left:3px solid var(--accent); padding-left:calc(1rem - 3px); background:linear-gradient(90deg, var(--accent-soft), var(--surface) 40%)}
+.msg-meta{display:flex; justify-content:space-between; align-items:center; font-size:.8rem; color:var(--text-muted); margin-bottom:.25rem}
+.msg-sender{font-weight:600; color:var(--text)}
+.msg-subject{margin:.1rem 0 .3rem; font-size:.95rem; font-weight:600; color:var(--text); line-height:1.35}
+.msg-card.unread .msg-subject{color:var(--accent)}
+.msg-excerpt{font-size:.85rem; color:var(--text-muted); line-height:1.45; max-height:3.3em; overflow:hidden}
+
+/* grades / term reports */
+.year-heading{margin:1rem 0 .5rem; font-size:.9rem; color:var(--text-muted); font-weight:600; letter-spacing:.03em; text-transform:uppercase}
+.report-grid{display:grid; grid-template-columns:repeat(auto-fit, minmax(260px, 1fr)); gap:.5rem; margin-bottom:1rem}
+.report-card{
+  display:flex; align-items:center; gap:.75rem; padding:.75rem 1rem; background:var(--surface);
+  border:1px solid var(--border); border-radius:var(--radius); text-decoration:none; color:var(--text);
+  box-shadow:var(--shadow-sm); transition:all .15s;
+}
+.report-card:hover{border-color:var(--accent); background:var(--accent-soft); transform:translateY(-1px)}
+.report-icon{font-size:1.6rem; line-height:1}
+.report-label{font-size:.9rem; font-weight:600; color:var(--text)}
+.report-sub{font-size:.75rem; color:var(--text-muted); margin-top:2px}
 @media (prefers-color-scheme: dark){
   .subj{background:hsl(var(--h) 50% 22%); color:hsl(var(--h) 75% 80%)}
 }
@@ -536,9 +603,13 @@ SHELL = """
     <a href="{{ url_for('home') }}" class="{% if view=='home' %}active{% endif %}">
       Homework <span class="count">{{ counts.upcoming }}</span>
     </a>
+    <a href="{{ url_for('messages_view') }}" class="{% if view=='messages' %}active{% endif %}">
+      Messages{% if unread %} <span class="count">{{ unread }}</span>{% endif %}
+    </a>
     <a href="{{ url_for('diary_view') }}" class="{% if view=='diary' %}active{% endif %}">Course Diary</a>
     <a href="{{ url_for('schedule_view') }}" class="{% if view=='schedule' %}active{% endif %}">Schedule</a>
-    <a href="{{ url_for('tests_view') }}" class="{% if view=='tests' %}active{% endif %}">Graded Exercises</a>
+    <a href="{{ url_for('grades_view') }}" class="{% if view=='grades' %}active{% endif %}">Grades</a>
+    <a href="{{ url_for('tests_view') }}" class="{% if view=='tests' %}active{% endif %}">Exercises</a>
   </nav>
 
   {% if show_stats %}
@@ -604,6 +675,7 @@ def render(title, view, body, counts=None, show_stats=False, flash=None, flash_c
         student="ANAMAN, Philippe · Bruxelles IV",
         flash=flash, flash_cls=flash_cls,
         cloud_mode=CLOUD_MODE,
+        unread=unread_message_count(),
     )
 
 
@@ -635,6 +707,8 @@ def render_card(a):
     hue = subject_hue(a.get("subject", ""))
     check_cls = "check checked" if a["done"] else "check"
     pill = '<span class="pill test">🔥 Test</span>' if is_test_entry(a) else ''
+    teacher = teacher_label(a.get("subject", ""))
+    teacher_html = f'<span class="teacher">· {esc(teacher)}</span>' if teacher else ''
     desc = esc(a.get("description", ""))
 
     # Render attachments
@@ -659,6 +733,7 @@ def render_card(a):
       <div class="body">
         <div class="meta">
           <span class="subj" style="--h:{hue}">{esc(a.get('subject',''))}</span>
+          {teacher_html}
           {pill}
         </div>
         <div class="desc">{desc}</div>
@@ -816,6 +891,91 @@ def tests_view():
                 '<th>Description</th><th>Weight</th><th>Grade</th></tr></thead><tbody>'
                 + "".join(tr) + '</tbody></table>')
     return render("Graded Exercises", "tests", body, _count_summary(assignments))
+
+
+@app.route("/messages")
+def messages_view():
+    assignments, _, _, _, _ = load_all()
+    msgs = _db.fetch_messages() if USE_SUPABASE else []
+    only_unread = request.args.get("unread") == "1"
+    if only_unread:
+        msgs = [m for m in msgs if m.get("unread")]
+
+    filters = [
+        '<div class="filters"><div class="seg">',
+        f'<a class="{"on" if not only_unread else ""}" href="?">All</a>',
+        f'<a class="{"on" if only_unread else ""}" href="?unread=1">Unread</a>',
+        '</div></div>',
+    ]
+
+    if not msgs:
+        body = '<div class="empty"><div class="icon">📬</div><h3>Inbox empty</h3><p>No announcements scraped yet.</p></div>'
+        return render("Messages", "messages", "".join(filters) + body, _count_summary(assignments))
+
+    cards = []
+    for m in msgs:
+        sender = esc(m.get("sender") or "—")
+        subj = esc(m.get("subject") or "")
+        sent = esc(m.get("sent_label") or "")
+        excerpt = esc(m.get("excerpt") or "")[:300]
+        unread_cls = "unread" if m.get("unread") else ""
+        atts = m.get("attachments") or []
+        chips = []
+        for a in atts:
+            name = esc((a.get("name") or "")[:60])
+            href = esc(a.get("href") or "#")
+            if not name or not href or href == "#":
+                continue
+            chips.append(f'<a class="att" href="{href}" target="_blank" rel="noopener">📎 {name}</a>')
+        atts_html = f'<div class="atts">{"".join(chips)}</div>' if chips else ""
+        cards.append(f"""
+        <div class="msg-card {unread_cls}">
+          <div class="msg-meta">
+            <span class="msg-sender">{sender}</span>
+            <span class="msg-date">{sent}</span>
+          </div>
+          <h4 class="msg-subject">{subj}</h4>
+          {f'<div class="msg-excerpt">{excerpt}</div>' if excerpt else ''}
+          {atts_html}
+        </div>""")
+    body = "".join(filters) + '<div class="card-list">' + "".join(cards) + '</div>'
+    return render("Messages", "messages", body, _count_summary(assignments))
+
+
+@app.route("/grades")
+def grades_view():
+    assignments, _, _, _, _ = load_all()
+    reports = _db.fetch_term_reports() if USE_SUPABASE else []
+    if not reports:
+        body = ('<div class="empty"><div class="icon">📊</div>'
+                '<h3>No term reports yet</h3>'
+                '<p>The scraper will pick them up as they are published.</p></div>')
+        return render("Grades", "grades", body, _count_summary(assignments))
+
+    # group by year_label
+    from collections import defaultdict
+    by_year = defaultdict(list)
+    for r in reports:
+        by_year[r.get("year_label") or "—"].append(r)
+
+    sections = []
+    for year in sorted(by_year.keys(), reverse=True):
+        rows = by_year[year]
+        items = []
+        for r in rows:
+            items.append(
+                f'<a class="report-card" href="{esc(r.get("download_url") or "#")}" target="_blank" rel="noopener">'
+                f'<div class="report-icon">📄</div>'
+                f'<div><div class="report-label">{esc(r.get("label") or "")}</div>'
+                f'<div class="report-sub">Click to download PDF</div></div>'
+                f'</a>'
+            )
+        sections.append(
+            f'<h3 class="year-heading">{esc(year)}</h3>'
+            f'<div class="report-grid">{"".join(items)}</div>'
+        )
+    body = "".join(sections)
+    return render("Grades", "grades", body, _count_summary(assignments))
 
 
 @app.post("/toggle-done")

@@ -67,6 +67,61 @@ def upsert_schedule(rows: list[dict]) -> int:
     return len(rows)
 
 
+def upsert_messages(rows: list[dict]) -> int:
+    sb = get_client()
+    if not sb or not rows:
+        return 0
+    rows = _dedup(rows, "message_key")
+    sb.table("messages").upsert(rows, on_conflict="message_key").execute()
+    return len(rows)
+
+
+def upsert_term_reports(rows: list[dict]) -> int:
+    sb = get_client()
+    if not sb or not rows:
+        return 0
+    rows = _dedup(rows, "report_id")
+    sb.table("term_reports").upsert(rows, on_conflict="report_id").execute()
+    return len(rows)
+
+
+def upsert_courses(rows: list[dict]) -> int:
+    sb = get_client()
+    if not sb or not rows:
+        return 0
+    rows = _dedup(rows, "course_code")
+    sb.table("courses").upsert(rows, on_conflict="course_code").execute()
+    return len(rows)
+
+
+def fetch_messages(unread_only: bool = False) -> list[dict]:
+    sb = get_client()
+    if not sb:
+        return []
+    q = sb.table("messages").select("*").order("sent_date", desc=True).order("id", desc=True)
+    if unread_only:
+        q = q.eq("unread", True)
+    return q.range(0, 999).execute().data or []
+
+
+def fetch_term_reports() -> list[dict]:
+    sb = get_client()
+    if not sb:
+        return []
+    return (sb.table("term_reports").select("*")
+            .order("year_label", desc=True).order("label", desc=True)
+            .execute().data or [])
+
+
+def fetch_courses() -> dict:
+    """Return {course_code: {name, teachers, description}}."""
+    sb = get_client()
+    if not sb:
+        return {}
+    rows = sb.table("courses").select("*").execute().data or []
+    return {r["course_code"]: r for r in rows}
+
+
 def record_run(**kwargs) -> None:
     sb = get_client()
     if not sb:
