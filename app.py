@@ -317,93 +317,155 @@ def esc(s):
 # ---------- templates ----------
 
 BASE_CSS = """
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap');
+
 :root{
-  --bg:#f6f7fb; --surface:#ffffff; --surface-2:#f0f2f7;
-  --text:#0f172a; --text-muted:#64748b; --text-soft:#94a3b8;
-  --border:#e2e8f0; --border-strong:#cbd5e1;
-  --accent:#4f46e5; --accent-hover:#4338ca; --accent-soft:#eef2ff;
-  --danger:#dc2626; --danger-soft:#fef2f2;
-  --warn:#d97706; --warn-soft:#fffbeb;
-  --ok:#059669; --ok-soft:#ecfdf5;
-  --info:#0284c7; --info-soft:#f0f9ff;
-  --shadow-sm:0 1px 2px rgba(15,23,42,.04), 0 1px 3px rgba(15,23,42,.06);
-  --shadow-md:0 4px 12px rgba(15,23,42,.08);
-  --radius:10px; --radius-sm:6px;
+  --bg:#fafaf7;            /* warm paper */
+  --surface:#ffffff;
+  --surface-2:#f4f3ee;
+  --text:#1a1a1c;
+  --text-muted:#6b7280;
+  --text-soft:#9ca3af;
+  --border:#e8e6df;
+  --border-strong:#d4d2ca;
+  --accent:#4338ca;         /* deep indigo */
+  --accent-2:#7c3aed;       /* violet companion */
+  --accent-hover:#3730a3;
+  --accent-soft:#eef2ff;
+  --danger:#b91c1c;
+  --danger-soft:#fef2f2;
+  --warn:#b45309;
+  --warn-soft:#fffbeb;
+  --ok:#047857;
+  --ok-soft:#ecfdf5;
+  --info:#0369a1;
+  --info-soft:#f0f9ff;
+  --shadow-sm:0 1px 2px rgba(20,22,28,.04), 0 1px 3px rgba(20,22,28,.05);
+  --shadow-md:0 6px 20px -4px rgba(20,22,28,.09), 0 2px 6px rgba(20,22,28,.04);
+  --shadow-lg:0 18px 40px -12px rgba(20,22,28,.14);
+  --radius:12px;
+  --radius-sm:8px;
+  --sidebar-w:240px;
 }
 @media (prefers-color-scheme: dark){
   :root{
-    --bg:#0b1020; --surface:#121829; --surface-2:#1a2238;
-    --text:#e2e8f0; --text-muted:#94a3b8; --text-soft:#64748b;
-    --border:#1e293b; --border-strong:#334155;
-    --accent:#818cf8; --accent-hover:#a5b4fc; --accent-soft:#1e1b4b;
-    --danger:#f87171; --danger-soft:#2a1414;
-    --warn:#fbbf24; --warn-soft:#2a1f0a;
-    --ok:#34d399; --ok-soft:#0a2a1f;
-    --info:#38bdf8; --info-soft:#0a1f2a;
-    --shadow-sm:0 1px 2px rgba(0,0,0,.3);
-    --shadow-md:0 4px 12px rgba(0,0,0,.4);
+    --bg:#0d0f14;
+    --surface:#151821;
+    --surface-2:#1d212d;
+    --text:#e8eaed;
+    --text-muted:#9ca3af;
+    --text-soft:#6b7280;
+    --border:#232734;
+    --border-strong:#363b4a;
+    --accent:#a5b4fc;
+    --accent-2:#c4b5fd;
+    --accent-hover:#c7d2fe;
+    --accent-soft:#1e1b4b;
+    --danger:#fca5a5;
+    --danger-soft:#3a1717;
+    --warn:#fcd34d;
+    --warn-soft:#3a2a0e;
+    --ok:#6ee7b7;
+    --ok-soft:#0c3a28;
+    --info:#7dd3fc;
+    --info-soft:#0d2838;
+    --shadow-sm:0 1px 2px rgba(0,0,0,.4);
+    --shadow-md:0 8px 24px rgba(0,0,0,.4);
+    --shadow-lg:0 20px 48px rgba(0,0,0,.6);
   }
 }
 *{box-sizing:border-box}
 html,body{margin:0;padding:0}
 body{
-  font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Inter,Helvetica,Arial,sans-serif;
-  background:var(--bg); color:var(--text); line-height:1.5;
-  -webkit-font-smoothing:antialiased; font-feature-settings:"cv02","cv03","cv04","cv11";
+  font-family:'Inter',-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;
+  background:var(--bg); color:var(--text); line-height:1.55;
+  -webkit-font-smoothing:antialiased; font-feature-settings:"cv11","ss01";
+  letter-spacing:-0.005em;
 }
 a{color:var(--accent); text-decoration:none}
 a:hover{color:var(--accent-hover)}
+h1,h2,h3,h4{margin:0; letter-spacing:-0.02em; font-weight:600; color:var(--text)}
 
-/* layout */
-.shell{max-width:1280px; margin:0 auto; padding:1.25rem 1.5rem 3rem}
-.topbar{
-  position:sticky; top:0; z-index:10; backdrop-filter:saturate(180%) blur(12px);
-  background:color-mix(in srgb, var(--bg) 80%, transparent);
-  border-bottom:1px solid var(--border); margin:-1.25rem -1.5rem 1.5rem; padding:.85rem 1.5rem;
-  display:flex; justify-content:space-between; align-items:center; gap:1rem;
+/* layout — sidebar + main */
+.app{display:grid; grid-template-columns:var(--sidebar-w) 1fr; min-height:100vh}
+.sidebar{
+  position:sticky; top:0; height:100vh; background:var(--surface);
+  border-right:1px solid var(--border); display:flex; flex-direction:column;
+  padding:1.25rem 0.85rem 1rem;
 }
-.brand{display:flex; align-items:center; gap:.6rem; font-weight:600; font-size:1rem}
+.main{padding:1.25rem 1.75rem 3.5rem; max-width:1100px; width:100%; margin:0 auto}
+
+/* brand */
+.brand{display:flex; align-items:center; gap:.65rem; padding:0 .35rem 1rem; border-bottom:1px solid var(--border); margin-bottom:.85rem}
 .brand .logo{
-  width:32px; height:32px; border-radius:8px; display:grid; place-items:center;
-  background:linear-gradient(135deg, var(--accent), #7c3aed); color:#fff; font-size:1.1rem;
+  width:34px; height:34px; border-radius:10px; display:grid; place-items:center; font-size:1.15rem;
+  background:linear-gradient(135deg, var(--accent), var(--accent-2)); color:#fff;
+  box-shadow:0 2px 8px rgba(67,56,202,.3);
 }
-.brand-sub{color:var(--text-muted); font-size:.82rem; font-weight:400}
+.brand .brand-name{font-weight:700; font-size:.95rem; letter-spacing:-0.01em}
+.brand .brand-sub{color:var(--text-muted); font-size:.72rem; font-weight:500}
+
+/* nav links */
+nav.side{display:flex; flex-direction:column; gap:1px; flex:1}
+nav.side a{
+  display:flex; align-items:center; gap:.7rem; padding:.55rem .65rem; font-size:.875rem;
+  font-weight:500; color:var(--text-muted); border-radius:var(--radius-sm); transition:all .12s;
+}
+nav.side a:hover{background:var(--surface-2); color:var(--text)}
+nav.side a.active{background:var(--accent-soft); color:var(--accent)}
+nav.side a.active .ico{color:var(--accent)}
+nav.side a .ico{width:16px; height:16px; color:var(--text-soft); transition:color .12s; flex-shrink:0}
+nav.side a:hover .ico{color:var(--text)}
+nav.side a .count{
+  margin-left:auto; padding:.05rem .45rem; font-size:.7rem; font-weight:600;
+  background:var(--surface-2); border-radius:999px; color:var(--text-muted); min-width:22px; text-align:center;
+}
+nav.side a.active .count{background:var(--accent); color:#fff}
+
+/* sidebar footer */
+.side-footer{border-top:1px solid var(--border); padding-top:.7rem; margin-top:.4rem}
+.status-line{display:flex; align-items:center; gap:.45rem; font-size:.75rem; color:var(--text-muted); padding:.3rem .6rem; margin-bottom:.5rem}
+.status-dot{width:7px; height:7px; border-radius:50%; background:var(--ok); flex-shrink:0}
+.status-dot.running{background:var(--warn); animation:pulse 1.4s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1} 50%{opacity:.35}}
+
+/* page header */
+.page-head{display:flex; align-items:flex-end; justify-content:space-between; margin-bottom:1.5rem; gap:1rem; flex-wrap:wrap}
+.page-head h1{font-size:1.65rem; line-height:1.15}
+.page-head .sub{color:var(--text-muted); font-size:.9rem; margin-top:.2rem}
 
 /* buttons */
 .btn{
-  display:inline-flex; align-items:center; gap:.4rem; padding:.5rem .9rem;
+  display:inline-flex; align-items:center; gap:.5rem; padding:.5rem .95rem;
   background:var(--accent); color:#fff; border:0; border-radius:var(--radius-sm);
-  font-size:.88rem; font-weight:500; cursor:pointer; transition:background .15s, transform .05s;
-  box-shadow:var(--shadow-sm);
+  font-family:inherit; font-size:.875rem; font-weight:500; cursor:pointer;
+  transition:all .15s; box-shadow:var(--shadow-sm);
 }
-.btn:hover{background:var(--accent-hover)}
-.btn:active{transform:translateY(1px)}
-.btn:disabled{opacity:.55; cursor:not-allowed}
+.btn:hover{background:var(--accent-hover); transform:translateY(-1px); box-shadow:var(--shadow-md)}
+.btn:active{transform:translateY(0)}
+.btn:disabled{opacity:.5; cursor:not-allowed; transform:none}
 .btn.ghost{background:transparent; color:var(--text); border:1px solid var(--border-strong); box-shadow:none}
-.btn.ghost:hover{background:var(--surface-2)}
-
-/* nav */
-nav.tabs{display:flex; gap:.25rem; border-bottom:1px solid var(--border); margin-bottom:1.25rem}
-nav.tabs a{
-  padding:.55rem .9rem; font-size:.88rem; font-weight:500; color:var(--text-muted);
-  border-bottom:2px solid transparent; margin-bottom:-1px; border-radius:var(--radius-sm) var(--radius-sm) 0 0;
-}
-nav.tabs a:hover{color:var(--text); background:var(--surface-2)}
-nav.tabs a.active{color:var(--accent); border-bottom-color:var(--accent); background:var(--accent-soft)}
-nav.tabs a .count{
-  display:inline-block; margin-left:.35rem; padding:.05rem .4rem; font-size:.72rem;
-  background:var(--surface-2); border-radius:999px; color:var(--text-muted); font-weight:600;
-}
-nav.tabs a.active .count{background:var(--accent); color:#fff}
+.btn.ghost:hover{background:var(--surface-2); transform:none; box-shadow:none}
+.btn .ico{width:15px; height:15px}
+.btn.sm{padding:.35rem .65rem; font-size:.8rem}
 
 /* stats grid */
-.stats{display:grid; grid-template-columns:repeat(auto-fit, minmax(150px, 1fr)); gap:.75rem; margin-bottom:1.25rem}
+.stats{display:grid; grid-template-columns:repeat(auto-fit, minmax(128px, 1fr)); gap:.65rem; margin-bottom:1.5rem}
 .stat{
   background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
-  padding:.9rem 1rem; box-shadow:var(--shadow-sm); position:relative; overflow:hidden;
+  padding:.8rem 1rem; box-shadow:var(--shadow-sm); position:relative; overflow:hidden;
+  transition:all .15s;
 }
-.stat .v{font-size:1.6rem; font-weight:700; letter-spacing:-.02em; line-height:1}
-.stat .l{font-size:.78rem; color:var(--text-muted); margin-top:.3rem; text-transform:uppercase; letter-spacing:.04em; font-weight:500}
+.stat:hover{border-color:var(--border-strong); transform:translateY(-1px)}
+.stat .v{font-size:1.75rem; font-weight:700; letter-spacing:-.035em; line-height:1; font-variant-numeric:tabular-nums}
+.stat .l{font-size:.72rem; color:var(--text-muted); margin-top:.3rem; text-transform:uppercase; letter-spacing:.07em; font-weight:600}
+.stat.danger::before,.stat.warn::before,.stat.info::before,.stat.ok::before{
+  content:""; position:absolute; left:0; top:0; bottom:0; width:3px; border-radius:3px 0 0 3px;
+}
+.stat.danger::before{background:var(--danger)}
+.stat.warn::before{background:var(--warn)}
+.stat.info::before{background:var(--info)}
+.stat.ok::before{background:var(--ok)}
 .stat.danger .v{color:var(--danger)}
 .stat.warn .v{color:var(--warn)}
 .stat.ok .v{color:var(--ok)}
@@ -411,58 +473,65 @@ nav.tabs a.active .count{background:var(--accent); color:#fff}
 
 /* filters */
 .filters{
-  display:flex; gap:.5rem; flex-wrap:wrap; align-items:center; margin-bottom:1rem;
-  background:var(--surface); padding:.6rem .75rem; border:1px solid var(--border); border-radius:var(--radius); box-shadow:var(--shadow-sm);
+  display:flex; gap:.6rem; flex-wrap:wrap; align-items:center; margin-bottom:1.25rem;
+  background:transparent; padding:0;
 }
-.seg{display:inline-flex; background:var(--surface-2); padding:2px; border-radius:7px; gap:2px}
+.seg{display:inline-flex; background:var(--surface); padding:3px; border-radius:9px; gap:2px; border:1px solid var(--border); box-shadow:var(--shadow-sm)}
 .seg a{
-  padding:.35rem .7rem; font-size:.82rem; color:var(--text-muted); border-radius:5px; font-weight:500;
+  padding:.4rem .85rem; font-size:.825rem; color:var(--text-muted); border-radius:6px; font-weight:500;
+  transition:all .12s;
 }
-.seg a.on{background:var(--surface); color:var(--text); box-shadow:var(--shadow-sm)}
+.seg a:hover{color:var(--text)}
+.seg a.on{background:var(--accent); color:#fff; box-shadow:0 1px 3px rgba(67,56,202,.3)}
 .filters select, .filters input[type=text]{
-  padding:.35rem .55rem; font-size:.85rem; background:var(--surface); color:var(--text);
-  border:1px solid var(--border-strong); border-radius:var(--radius-sm); outline:none;
+  padding:.45rem .7rem; font-size:.85rem; background:var(--surface); color:var(--text);
+  border:1px solid var(--border); border-radius:var(--radius-sm); outline:none;
+  font-family:inherit; box-shadow:var(--shadow-sm); transition:border-color .12s;
 }
-.filters select:focus, .filters input:focus{border-color:var(--accent)}
-.filters .toggle{display:inline-flex; align-items:center; gap:.35rem; font-size:.85rem; color:var(--text-muted); cursor:pointer}
+.filters select:focus, .filters input:focus{border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-soft)}
+.filters .toggle{display:inline-flex; align-items:center; gap:.4rem; font-size:.85rem; color:var(--text-muted); cursor:pointer; padding:.4rem .7rem; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-sm); box-shadow:var(--shadow-sm)}
+.filters .toggle input{accent-color:var(--accent)}
 
 /* card list */
-.card-list{display:flex; flex-direction:column; gap:.5rem}
+.card-list{display:flex; flex-direction:column; gap:.55rem}
 .card{
-  background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
-  padding:.85rem 1rem; display:grid; grid-template-columns:auto 110px 1fr auto;
-  gap:.9rem; align-items:start; box-shadow:var(--shadow-sm); transition:box-shadow .15s, border-color .15s;
+  position:relative; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+  padding:.95rem 1.1rem .95rem 1.25rem; display:grid; grid-template-columns:auto 96px 1fr; gap:.9rem;
+  align-items:start; box-shadow:var(--shadow-sm); transition:all .15s;
 }
-.card:hover{box-shadow:var(--shadow-md); border-color:var(--border-strong)}
-.card.done{opacity:.55}
-.card.done .desc, .card.done .meta, .card.done .subj{text-decoration:line-through}
-.card.today{border-left:3px solid var(--warn); padding-left:calc(1rem - 3px)}
-.card.overdue{border-left:3px solid var(--danger); padding-left:calc(1rem - 3px); background:linear-gradient(90deg, var(--danger-soft), var(--surface) 40%)}
-.card.soon{border-left:3px solid var(--info); padding-left:calc(1rem - 3px)}
+.card::before{content:""; position:absolute; left:0; top:10px; bottom:10px; width:3px; border-radius:3px; background:transparent; transition:background .15s}
+.card:hover{border-color:var(--border-strong); box-shadow:var(--shadow-md); transform:translateY(-1px)}
+.card.done{opacity:.5}
+.card.done .desc, .card.done .subj{text-decoration:line-through; text-decoration-thickness:1.5px}
+.card.today::before{background:var(--warn)}
+.card.overdue::before{background:var(--danger)}
+.card.overdue{background:linear-gradient(90deg, var(--danger-soft) 0%, var(--surface) 40%)}
+.card.soon::before{background:var(--info)}
 
 .check{
-  width:22px; height:22px; border:2px solid var(--border-strong); border-radius:6px;
+  width:22px; height:22px; border:2px solid var(--border-strong); border-radius:7px;
   background:var(--surface); cursor:pointer; display:grid; place-items:center; padding:0; margin-top:2px;
   transition:all .15s;
 }
-.check:hover{border-color:var(--accent)}
+.check:hover{border-color:var(--accent); transform:scale(1.05)}
 .check.checked{background:var(--accent); border-color:var(--accent); color:#fff}
-.check.checked::after{content:"✓"; font-size:.85rem; font-weight:700}
+.check.checked::after{content:""; width:11px; height:6px; border-left:2px solid currentColor; border-bottom:2px solid currentColor; transform:rotate(-45deg) translate(1px,-1px)}
 
-.when{display:flex; flex-direction:column; gap:.15rem}
-.when .date{font-size:.82rem; color:var(--text-muted); font-weight:500}
-.when .days{font-size:1rem; font-weight:600; letter-spacing:-.01em}
+.when{display:flex; flex-direction:column; gap:.1rem; padding-top:2px}
+.when .date{font-size:.72rem; color:var(--text-muted); font-weight:600; text-transform:uppercase; letter-spacing:.05em}
+.when .days{font-size:1rem; font-weight:600; letter-spacing:-.015em; font-variant-numeric:tabular-nums}
 .when.today .days{color:var(--warn)}
 .when.overdue .days{color:var(--danger)}
 .when.soon .days{color:var(--info)}
-.when.later .days{color:var(--text-soft)}
+.when.later .days{color:var(--text)}
 
-.body{display:flex; flex-direction:column; gap:.35rem; min-width:0}
-.meta{display:flex; gap:.4rem; align-items:center; flex-wrap:wrap}
+.body{display:flex; flex-direction:column; gap:.45rem; min-width:0}
+.meta{display:flex; gap:.5rem; align-items:center; flex-wrap:wrap}
 .subj{
-  display:inline-flex; align-items:center; gap:.3rem; font-size:.72rem; font-weight:600;
-  padding:.15rem .5rem; border-radius:999px; letter-spacing:.02em;
-  background:hsl(var(--h) 75% 94%); color:hsl(var(--h) 60% 32%);
+  display:inline-flex; align-items:center; gap:.3rem; font-size:.7rem; font-weight:700;
+  padding:.2rem .55rem; border-radius:5px; letter-spacing:.03em;
+  background:hsl(var(--h) 70% 94%); color:hsl(var(--h) 55% 28%);
+  font-family:'JetBrains Mono',ui-monospace,monospace;
 }
 .teacher{font-size:.78rem; color:var(--text-muted); font-weight:500}
 
@@ -493,30 +562,32 @@ nav.tabs a.active .count{background:var(--accent); color:#fff}
 .report-sub{font-size:.75rem; color:var(--text-muted); margin-top:2px}
 .muted-small{color:var(--text-muted); font-size:.82rem; max-width:320px}
 @media (prefers-color-scheme: dark){
-  .subj{background:hsl(var(--h) 50% 22%); color:hsl(var(--h) 75% 80%)}
+  .subj{background:hsl(var(--h) 40% 20%); color:hsl(var(--h) 80% 78%)}
 }
 .pill{
-  display:inline-flex; align-items:center; gap:.25rem; padding:.1rem .45rem; border-radius:4px;
-  font-size:.7rem; font-weight:600; letter-spacing:.03em; text-transform:uppercase;
+  display:inline-flex; align-items:center; gap:.25rem; padding:.15rem .5rem; border-radius:5px;
+  font-size:.68rem; font-weight:700; letter-spacing:.05em; text-transform:uppercase;
 }
 .pill.test{background:var(--danger-soft); color:var(--danger)}
 .pill.assign{background:var(--accent-soft); color:var(--accent)}
 .pill.diary{background:var(--info-soft); color:var(--info)}
 
-.desc{font-size:.92rem; color:var(--text); line-height:1.5; white-space:pre-wrap; word-wrap:break-word}
-.desc a{color:var(--accent); text-decoration:underline}
-.atts{display:flex; flex-wrap:wrap; gap:.35rem; margin-top:.1rem}
+.desc{font-size:.935rem; color:var(--text); line-height:1.55; white-space:pre-wrap; word-wrap:break-word}
+.desc a{color:var(--accent); text-decoration:underline; text-underline-offset:2px}
+.atts{display:flex; flex-wrap:wrap; gap:.4rem; margin-top:.15rem}
 .atts .att{
-  display:inline-flex; align-items:center; gap:.3rem; font-size:.78rem; padding:.22rem .55rem;
+  display:inline-flex; align-items:center; gap:.35rem; font-size:.78rem; padding:.3rem .6rem;
   background:var(--surface-2); color:var(--text); border:1px solid var(--border);
-  border-radius:999px; text-decoration:none; transition:background .15s, border-color .15s;
+  border-radius:7px; text-decoration:none; transition:all .12s; font-weight:500;
 }
-.atts .att:hover{background:var(--accent-soft); border-color:var(--accent); color:var(--accent)}
+.atts .att:hover{background:var(--accent-soft); border-color:var(--accent); color:var(--accent); transform:translateY(-1px)}
 .note-input{
-  margin-top:.3rem; font-size:.82rem; padding:.3rem .5rem; background:var(--surface-2); color:var(--text);
-  border:1px dashed var(--border-strong); border-radius:4px; width:100%; font-family:inherit;
+  margin-top:.35rem; font-size:.82rem; padding:.4rem .6rem; background:transparent; color:var(--text);
+  border:1px dashed var(--border-strong); border-radius:6px; width:100%; font-family:inherit;
+  transition:all .12s;
 }
-.note-input:focus{outline:none; border-color:var(--accent); background:var(--surface)}
+.note-input:hover{background:var(--surface-2)}
+.note-input:focus{outline:none; border-color:var(--accent); border-style:solid; background:var(--surface); box-shadow:0 0 0 3px var(--accent-soft)}
 .note-input::placeholder{color:var(--text-soft)}
 
 .actions{display:flex; align-items:start}
@@ -527,50 +598,55 @@ nav.tabs a.active .count{background:var(--accent); color:#fff}
   border:1px solid var(--border); border-radius:var(--radius); overflow:hidden; box-shadow:var(--shadow-sm);
 }
 .data-table th, .data-table td{
-  padding:.6rem .85rem; text-align:left; border-bottom:1px solid var(--border); font-size:.9rem; vertical-align:top;
+  padding:.7rem .95rem; text-align:left; border-bottom:1px solid var(--border); font-size:.9rem; vertical-align:top;
 }
 .data-table th{
-  background:var(--surface-2); font-size:.72rem; font-weight:600; text-transform:uppercase;
-  color:var(--text-muted); letter-spacing:.05em;
+  background:var(--surface-2); font-size:.7rem; font-weight:700; text-transform:uppercase;
+  color:var(--text-muted); letter-spacing:.08em;
 }
 .data-table tr:last-child td{border-bottom:0}
 .data-table tr:hover td{background:var(--surface-2)}
 
 /* empty state */
 .empty{
-  text-align:center; padding:3rem 1rem; background:var(--surface); border:1px dashed var(--border-strong);
+  text-align:center; padding:4rem 1rem; background:var(--surface); border:1px dashed var(--border-strong);
   border-radius:var(--radius); color:var(--text-muted);
 }
-.empty .icon{font-size:2.5rem; margin-bottom:.5rem}
-.empty h3{margin:.2rem 0; color:var(--text); font-weight:600}
-.empty p{margin:.2rem 0; font-size:.9rem}
+.empty .icon{font-size:2.75rem; margin-bottom:.7rem; opacity:.7}
+.empty h3{margin:.25rem 0; color:var(--text); font-weight:600; font-size:1.05rem}
+.empty p{margin:.3rem 0 0; font-size:.9rem; max-width:360px; margin-left:auto; margin-right:auto}
 
 /* toast */
 .toast{
-  position:fixed; top:1rem; right:1rem; padding:.6rem 1rem; border-radius:var(--radius-sm);
-  background:var(--ok-soft); color:var(--ok); border:1px solid var(--ok); font-size:.88rem; font-weight:500;
-  box-shadow:var(--shadow-md); animation:slideIn .3s, fadeOut .3s 3.5s forwards; z-index:100;
+  position:fixed; bottom:1.25rem; right:1.25rem; padding:.75rem 1.15rem; border-radius:var(--radius);
+  background:var(--surface); color:var(--text); border:1px solid var(--border); font-size:.88rem; font-weight:500;
+  box-shadow:var(--shadow-lg); animation:slideUp .3s ease, fadeOut .4s 3.5s forwards; z-index:100;
+  display:flex; align-items:center; gap:.5rem; max-width:420px;
 }
-.toast.err{background:var(--danger-soft); color:var(--danger); border-color:var(--danger)}
-@keyframes slideIn{from{transform:translateX(20px); opacity:0} to{transform:none; opacity:1}}
+.toast::before{content:""; width:8px; height:8px; border-radius:50%; background:var(--ok)}
+.toast.err{color:var(--danger)}
+.toast.err::before{background:var(--danger)}
+@keyframes slideUp{from{transform:translateY(12px); opacity:0} to{transform:none; opacity:1}}
 @keyframes fadeOut{to{opacity:0; transform:translateY(-6px)}}
 
-.status-dot{
-  display:inline-block; width:8px; height:8px; border-radius:50%; background:var(--ok); margin-right:.4rem;
-  animation:pulse 1.5s ease-in-out infinite;
-}
-.status-dot.running{background:var(--warn)}
-@keyframes pulse{0%,100%{opacity:1} 50%{opacity:.4}}
-
 /* responsive */
-@media (max-width:720px){
-  .card{grid-template-columns:auto 1fr; gap:.6rem}
+@media (max-width:840px){
+  .app{grid-template-columns:1fr}
+  .sidebar{
+    position:fixed; bottom:0; left:0; right:0; top:auto; height:auto; z-index:20;
+    flex-direction:row; padding:.4rem .5rem; border-top:1px solid var(--border); border-right:0;
+    box-shadow:var(--shadow-lg);
+  }
+  .brand, .side-footer, .status-line{display:none}
+  nav.side{flex-direction:row; justify-content:space-around; overflow-x:auto; gap:.1rem}
+  nav.side a{flex-direction:column; gap:.15rem; padding:.4rem .5rem; font-size:.68rem; text-align:center; flex:1; min-width:0}
+  nav.side a .count{margin-left:0; font-size:.65rem; padding:0 .3rem}
+  .main{padding:1rem 1rem 5rem}
+  .page-head h1{font-size:1.35rem}
+  .stats{grid-template-columns:repeat(auto-fit, minmax(108px, 1fr))}
+  .card{grid-template-columns:auto 1fr; gap:.65rem}
   .card .when{grid-column:2; order:2}
   .card .body{grid-column:1/-1; order:3}
-  .card .actions{grid-column:1/-1; order:4}
-  .stats{grid-template-columns:repeat(2, 1fr)}
-  .topbar{padding:.65rem 1rem; margin:-1.25rem -1rem 1rem}
-  .shell{padding:1rem}
 }
 
 form.inline{display:inline; margin:0}
@@ -583,52 +659,90 @@ SHELL = """
 <style>{{ css | safe }}</style>
 </head><body>
 
-<div class="shell">
-  <div class="topbar">
+<div class="app">
+  <aside class="sidebar">
     <div class="brand">
       <div class="logo">📚</div>
       <div>
-        <div>SMS Dashboard</div>
-        <div class="brand-sub">
-          {{ student }} · <span class="status-dot {% if scraping %}running{% endif %}"></span>
-          {% if scraping %}Scraping…{% elif last_run %}Updated {{ last_run }}{% else %}No data yet{% endif %}
-        </div>
+        <div class="brand-name">SMS</div>
+        <div class="brand-sub">Philippe · B4 S5</div>
       </div>
     </div>
-    <form class="inline" action="{{ url_for('scrape_now') }}" method="post">
-      <button class="btn" {% if scraping %}disabled{% endif %}>
-        {% if scraping %}⏳ Running…{% else %}🔄 Refresh now{% endif %}
-      </button>
-    </form>
-  </div>
 
-  {% if flash %}<div class="toast {% if flash_cls=='err' %}err{% endif %}">{{ flash }}</div>{% endif %}
+    <nav class="side">
+      <a href="{{ url_for('home') }}" class="{% if view=='home' %}active{% endif %}" title="Homework">
+        <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+        <span>Homework</span>
+        {% if counts.upcoming %}<span class="count">{{ counts.upcoming }}</span>{% endif %}
+      </a>
+      <a href="{{ url_for('messages_view') }}" class="{% if view=='messages' %}active{% endif %}" title="Messages">
+        <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+        <span>Messages</span>
+        {% if unread %}<span class="count">{{ unread }}</span>{% endif %}
+      </a>
+      <a href="{{ url_for('diary_view') }}" class="{% if view=='diary' %}active{% endif %}" title="Course Diary">
+        <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+        <span>Course Diary</span>
+      </a>
+      <a href="{{ url_for('schedule_view') }}" class="{% if view=='schedule' %}active{% endif %}" title="Schedule">
+        <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        <span>Schedule</span>
+      </a>
+      <a href="{{ url_for('grades_view') }}" class="{% if view=='grades' %}active{% endif %}" title="Grades">
+        <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2z"/></svg>
+        <span>Grades</span>
+      </a>
+      <a href="{{ url_for('files_view') }}" class="{% if view=='files' %}active{% endif %}" title="Files">
+        <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        <span>Files</span>
+      </a>
+      <a href="{{ url_for('tests_view') }}" class="{% if view=='tests' %}active{% endif %}" title="Exercises">
+        <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        <span>Exercises</span>
+      </a>
+    </nav>
 
-  <nav class="tabs">
-    <a href="{{ url_for('home') }}" class="{% if view=='home' %}active{% endif %}">
-      Homework <span class="count">{{ counts.upcoming }}</span>
-    </a>
-    <a href="{{ url_for('messages_view') }}" class="{% if view=='messages' %}active{% endif %}">
-      Messages{% if unread %} <span class="count">{{ unread }}</span>{% endif %}
-    </a>
-    <a href="{{ url_for('diary_view') }}" class="{% if view=='diary' %}active{% endif %}">Course Diary</a>
-    <a href="{{ url_for('schedule_view') }}" class="{% if view=='schedule' %}active{% endif %}">Schedule</a>
-    <a href="{{ url_for('grades_view') }}" class="{% if view=='grades' %}active{% endif %}">Grades</a>
-    <a href="{{ url_for('files_view') }}" class="{% if view=='files' %}active{% endif %}">Files</a>
-    <a href="{{ url_for('tests_view') }}" class="{% if view=='tests' %}active{% endif %}">Exercises</a>
-  </nav>
+    <div class="side-footer">
+      <div class="status-line">
+        <span class="status-dot {% if scraping %}running{% endif %}"></span>
+        <span>{% if scraping %}Scraping…{% elif last_run %}Updated {{ last_run }}{% else %}No data yet{% endif %}</span>
+      </div>
+      <form class="inline" action="{{ url_for('scrape_now') }}" method="post" style="display:block; padding:0 .25rem">
+        <button class="btn ghost sm" {% if scraping %}disabled{% endif %} style="width:100%; justify-content:center">
+          {% if scraping %}
+            <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            Running
+          {% else %}
+            <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+            Refresh
+          {% endif %}
+        </button>
+      </form>
+    </div>
+  </aside>
 
-  {% if show_stats %}
-  <div class="stats">
-    <div class="stat {% if counts.overdue %}danger{% endif %}"><div class="v">{{ counts.overdue }}</div><div class="l">Overdue</div></div>
-    <div class="stat {% if counts.today %}warn{% endif %}"><div class="v">{{ counts.today }}</div><div class="l">Due today</div></div>
-    <div class="stat info"><div class="v">{{ counts.week }}</div><div class="l">This week</div></div>
-    <div class="stat {% if counts.tests_week %}danger{% endif %}"><div class="v">{{ counts.tests_week }}</div><div class="l">Tests</div></div>
-    <div class="stat"><div class="v">{{ counts.upcoming }}</div><div class="l">Upcoming</div></div>
-  </div>
-  {% endif %}
+  <main class="main">
+    {% if flash %}<div class="toast {% if flash_cls=='err' %}err{% endif %}">{{ flash }}</div>{% endif %}
 
-  {{ body | safe }}
+    <div class="page-head">
+      <div>
+        <h1>{{ page_title or title }}</h1>
+        {% if page_sub %}<div class="sub">{{ page_sub }}</div>{% endif %}
+      </div>
+    </div>
+
+    {% if show_stats %}
+    <div class="stats">
+      <div class="stat {% if counts.overdue %}danger{% endif %}"><div class="v">{{ counts.overdue }}</div><div class="l">Overdue</div></div>
+      <div class="stat {% if counts.today %}warn{% endif %}"><div class="v">{{ counts.today }}</div><div class="l">Due today</div></div>
+      <div class="stat info"><div class="v">{{ counts.week }}</div><div class="l">This week</div></div>
+      <div class="stat {% if counts.tests_week %}danger{% endif %}"><div class="v">{{ counts.tests_week }}</div><div class="l">Tests</div></div>
+      <div class="stat"><div class="v">{{ counts.upcoming }}</div><div class="l">Upcoming</div></div>
+    </div>
+    {% endif %}
+
+    {{ body | safe }}
+  </main>
 </div>
 
 <script>
@@ -678,6 +792,16 @@ document.querySelectorAll('.check').forEach(b => {
 """
 
 
+PAGE_TITLES = {
+    "home":     ("Homework",         "What's due and what's done"),
+    "messages": ("Messages",         "Announcements from teachers and school"),
+    "diary":    ("Course Diary",     "Teachers' in-class notes, by subject"),
+    "schedule": ("Schedule",         "Classes and all-day events this week"),
+    "grades":   ("Grades",           "Term reports going back through the years"),
+    "files":    ("Files",            "All attachments across diary, homework, and messages"),
+    "tests":    ("Graded Exercises", "Scores recorded by teachers"),
+}
+
 def render(title, view, body, counts=None, show_stats=False, flash=None, flash_cls="ok"):
     scraping = _scrape_lock.locked()
     if CLOUD_MODE and not scraping:
@@ -687,6 +811,7 @@ def render(title, view, body, counts=None, show_stats=False, flash=None, flash_c
                 scraping = True
         except Exception:
             pass
+    page_title, page_sub = PAGE_TITLES.get(view, (title, ""))
     return render_template_string(
         SHELL, title=title, view=view, body=body, css=BASE_CSS,
         counts=counts or {"upcoming": 0, "today": 0, "week": 0, "total": 0, "done": 0,
@@ -696,6 +821,7 @@ def render(title, view, body, counts=None, show_stats=False, flash=None, flash_c
         flash=flash, flash_cls=flash_cls,
         cloud_mode=CLOUD_MODE,
         unread=unread_message_count(),
+        page_title=page_title, page_sub=page_sub,
     )
 
 
