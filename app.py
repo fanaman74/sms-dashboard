@@ -265,6 +265,17 @@ def _count_summary(assignments):
 
 
 def _last_run():
+    # Prefer Supabase scrape_runs (works on cloud)
+    if USE_SUPABASE:
+        try:
+            r = _db.fetch_last_run()
+            if r and r.get("started_at"):
+                # friendly format: "YYYY-MM-DD HH:MM"
+                ts = r["started_at"].replace("T", " ")[:16]
+                return ts
+        except Exception:
+            pass
+    # Fallback: local run_log.txt
     log = OUT / "run_log.txt"
     if not log.exists():
         return None
