@@ -458,17 +458,21 @@ nav.tabs a.active .count{background:var(--accent); color:#fff}
 .btn.sm{padding:.35rem .65rem; font-size:.8rem}
 
 /* stats grid */
-.stats{display:grid; grid-template-columns:repeat(auto-fit, minmax(128px, 1fr)); gap:.65rem; margin-bottom:1.5rem}
+.stats{display:grid; grid-template-columns:repeat(auto-fit, minmax(148px, 1fr)); gap:.75rem; margin-bottom:0}
 .stat{
   background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
-  padding:.8rem 1rem; box-shadow:var(--shadow-sm); position:relative; overflow:hidden;
-  transition:all .15s;
+  padding:1.25rem 1.35rem 1.1rem; box-shadow:var(--shadow-sm); position:relative; overflow:hidden;
+  transition:all .18s; cursor:pointer; user-select:none;
 }
-.stat:hover{border-color:var(--border-strong); transform:translateY(-1px)}
-.stat .v{font-size:1.75rem; font-weight:700; letter-spacing:-.035em; line-height:1; font-variant-numeric:tabular-nums}
-.stat .l{font-size:.72rem; color:var(--text-muted); margin-top:.3rem; text-transform:uppercase; letter-spacing:.07em; font-weight:600}
+.stat:hover{border-color:var(--border-strong); transform:translateY(-2px); box-shadow:var(--shadow-md)}
+.stat.active{
+  border-color:var(--accent); box-shadow:0 0 0 2px var(--accent-soft), var(--shadow-md);
+  transform:translateY(-2px);
+}
+.stat .v{font-size:2.4rem; font-weight:700; letter-spacing:-.04em; line-height:1; font-variant-numeric:tabular-nums}
+.stat .l{font-size:.73rem; color:var(--text-muted); margin-top:.4rem; text-transform:uppercase; letter-spacing:.07em; font-weight:600}
 .stat.danger::before,.stat.warn::before,.stat.info::before,.stat.ok::before{
-  content:""; position:absolute; left:0; top:0; bottom:0; width:3px; border-radius:3px 0 0 3px;
+  content:""; position:absolute; left:0; top:0; bottom:0; width:4px; border-radius:4px 0 0 4px;
 }
 .stat.danger::before{background:var(--danger)}
 .stat.warn::before{background:var(--warn)}
@@ -478,6 +482,57 @@ nav.tabs a.active .count{background:var(--accent); color:#fff}
 .stat.warn .v{color:var(--warn)}
 .stat.ok .v{color:var(--ok)}
 .stat.info .v{color:var(--info)}
+
+/* stat carousel */
+.stat-carousel{
+  overflow:hidden; max-height:0; opacity:0;
+  transition:max-height .35s cubic-bezier(.4,0,.2,1), opacity .25s ease, margin .3s ease;
+  margin-top:0;
+}
+.stat-carousel.open{max-height:320px; opacity:1; margin-top:.75rem}
+.carousel-panel{display:none; flex-direction:column; gap:.5rem}
+.carousel-panel.active{display:flex}
+.carousel-header{
+  display:flex; align-items:center; justify-content:space-between; padding:.1rem 0 .25rem;
+}
+.carousel-title{font-size:.8rem; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:var(--text-muted)}
+.carousel-nav{display:flex; align-items:center; gap:.5rem}
+.carousel-nav button{
+  width:28px; height:28px; border-radius:50%; border:1px solid var(--border-strong);
+  background:var(--surface); color:var(--text); cursor:pointer; display:grid; place-items:center;
+  transition:all .12s; padding:0; font-size:.9rem; line-height:1;
+}
+.carousel-nav button:hover{background:var(--surface-2); border-color:var(--accent); color:var(--accent)}
+.carousel-nav button:disabled{opacity:.3; cursor:not-allowed}
+.carousel-nav .c-pos{font-size:.78rem; color:var(--text-muted); font-variant-numeric:tabular-nums; min-width:40px; text-align:center}
+.carousel-track-wrap{overflow:hidden; border-radius:var(--radius); border:1px solid var(--border)}
+.carousel-track{
+  display:flex; gap:0; transition:transform .28s cubic-bezier(.4,0,.2,1);
+}
+.c-item{
+  flex:0 0 100%; padding:.85rem 1.1rem; background:var(--surface); border-right:1px solid var(--border);
+  display:grid; grid-template-columns:72px 1fr; gap:.75rem; align-items:start; min-height:70px;
+}
+.c-item:last-child{border-right:none}
+.c-when{display:flex; flex-direction:column; gap:.1rem; padding-top:1px}
+.c-date{font-size:.68rem; color:var(--text-muted); font-weight:600; text-transform:uppercase; letter-spacing:.04em}
+.c-days{font-size:.92rem; font-weight:700; letter-spacing:-.01em; font-variant-numeric:tabular-nums}
+.c-days.overdue{color:var(--danger)}
+.c-days.today{color:var(--warn)}
+.c-days.soon{color:var(--info)}
+.c-body{min-width:0}
+.c-subj{
+  display:inline-flex; font-size:.65rem; font-weight:700; padding:.15rem .45rem; border-radius:4px;
+  letter-spacing:.03em; margin-bottom:.25rem;
+  background:hsl(var(--h) 70% 94%); color:hsl(var(--h) 55% 28%);
+  font-family:'JetBrains Mono',ui-monospace,monospace;
+}
+@media (prefers-color-scheme: dark){
+  .c-subj{background:hsl(var(--h) 40% 20%); color:hsl(var(--h) 80% 78%)}
+}
+.c-desc{font-size:.84rem; color:var(--text); line-height:1.45; white-space:pre-wrap; word-break:break-word; max-height:2.9em; overflow:hidden}
+.c-pill{display:inline-flex; font-size:.62rem; font-weight:700; padding:.1rem .4rem; border-radius:3px; letter-spacing:.04em; text-transform:uppercase; background:var(--danger-soft); color:var(--danger); margin-left:.35rem; vertical-align:middle}
+.carousel-empty{padding:1rem 1.25rem; color:var(--text-muted); font-size:.88rem; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); text-align:center}
 
 /* filters */
 .filters{
@@ -647,7 +702,10 @@ nav.tabs a.active .count{background:var(--accent); color:#fff}
   nav.tabs a span:not(.count){display:inline}
   .main{padding:1.25rem 1rem 3rem}
   .page-head h1{font-size:1.35rem}
-  .stats{grid-template-columns:repeat(auto-fit, minmax(108px, 1fr))}
+  .stats{grid-template-columns:repeat(auto-fit, minmax(120px, 1fr))}
+  .stat .v{font-size:2rem}
+  .stat-carousel.open{max-height:280px}
+  .c-item{grid-template-columns:60px 1fr}
   .card{grid-template-columns:auto 1fr; gap:.65rem}
   .card .when{grid-column:2; order:2}
   .card .body{grid-column:1/-1; order:3}
@@ -737,12 +795,125 @@ SHELL = """
 
     {% if show_stats %}
     <div class="stats">
-      <div class="stat {% if counts.overdue %}danger{% endif %}"><div class="v">{{ counts.overdue }}</div><div class="l">Overdue</div></div>
-      <div class="stat {% if counts.today %}warn{% endif %}"><div class="v">{{ counts.today }}</div><div class="l">Due today</div></div>
-      <div class="stat info"><div class="v">{{ counts.week }}</div><div class="l">This week</div></div>
-      <div class="stat {% if counts.tests_week %}danger{% endif %}"><div class="v">{{ counts.tests_week }}</div><div class="l">Tests</div></div>
-      <div class="stat"><div class="v">{{ counts.upcoming }}</div><div class="l">Upcoming</div></div>
+      <div class="stat {% if counts.overdue %}danger{% endif %}" data-panel="overdue" onclick="togglePanel(this,'overdue')"><div class="v">{{ counts.overdue }}</div><div class="l">Overdue</div></div>
+      <div class="stat {% if counts.today %}warn{% endif %}" data-panel="today" onclick="togglePanel(this,'today')"><div class="v">{{ counts.today }}</div><div class="l">Due today</div></div>
+      <div class="stat info" data-panel="week" onclick="togglePanel(this,'week')"><div class="v">{{ counts.week }}</div><div class="l">This week</div></div>
+      <div class="stat {% if counts.tests_week %}danger{% endif %}" data-panel="tests" onclick="togglePanel(this,'tests')"><div class="v">{{ counts.tests_week }}</div><div class="l">Tests</div></div>
+      <div class="stat" data-panel="upcoming" onclick="togglePanel(this,'upcoming')"><div class="v">{{ counts.upcoming }}</div><div class="l">Upcoming</div></div>
     </div>
+    <div class="stat-carousel" id="stat-carousel">
+      {% for key, label in [('overdue','Overdue'),('today','Due Today'),('week','This Week'),('tests','Tests This Week'),('upcoming','Upcoming')] %}
+      <div class="carousel-panel" id="panel-{{ key }}">
+        <div class="carousel-header">
+          <span class="carousel-title" id="ctitle-{{ key }}">{{ label }}</span>
+          <div class="carousel-nav">
+            <button onclick="carouselPrev('{{ key }}')" id="prev-{{ key }}" disabled>&#8592;</button>
+            <span class="c-pos" id="pos-{{ key }}"></span>
+            <button onclick="carouselNext('{{ key }}')" id="next-{{ key }}">&#8594;</button>
+          </div>
+        </div>
+        <div class="carousel-track-wrap">
+          <div class="carousel-track" id="track-{{ key }}"></div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    <script>
+    var _carouselData = {{ carousel_json | safe }};
+    var _carouselIdx = {};
+    var _activePanel = null;
+    var _activeStat = null;
+
+    function subjectHue(s){var h=0; for(var i=0;i<s.length;i++) h=(h*31+s.charCodeAt(i))&0xFFFF; return h%360}
+
+    function renderTrack(key) {
+      var items = _carouselData[key] || [];
+      var track = document.getElementById('track-'+key);
+      var posEl = document.getElementById('pos-'+key);
+      var title = document.getElementById('ctitle-'+key);
+      var labels = {overdue:'Overdue',today:'Due Today',week:'This Week',tests:'Tests This Week',upcoming:'Upcoming'};
+      if (!track) return;
+      if (items.length === 0) {
+        track.closest('.carousel-track-wrap').outerHTML = '<div class="carousel-empty">Nothing here — all clear! ✨</div>';
+        if (posEl) posEl.textContent = '';
+        return;
+      }
+      var html = '';
+      items.forEach(function(a) {
+        var hue = subjectHue(a.subject||'');
+        var days = a.days_until;
+        var daysCls = a.is_overdue ? 'overdue' : (a.is_today ? 'today' : (days !== null && days <= 3 ? 'soon' : ''));
+        var daysLbl = days === null ? '—' : (a.is_today ? 'Today' : (days === 1 ? 'Tomorrow' : (days < 0 ? (-days)+'d ago' : 'in '+days+'d')));
+        var pill = a.is_test ? '<span class="c-pill">🔥 Test</span>' : '';
+        var desc = (a.description||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+        var subj = (a.subject||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+        var date = (a.pretty_date||'').replace(/&/g,'&amp;');
+        html += '<div class="c-item">'
+          + '<div class="c-when"><div class="c-date">'+date+'</div><div class="c-days '+daysCls+'">'+daysLbl+'</div></div>'
+          + '<div class="c-body"><span class="c-subj" style="--h:'+hue+'">'+subj+'</span>'+pill+'<div class="c-desc">'+desc+'</div></div>'
+          + '</div>';
+      });
+      track.innerHTML = html;
+      _carouselIdx[key] = 0;
+      if (posEl) posEl.textContent = '1 / ' + items.length;
+      title.textContent = labels[key] + ' (' + items.length + ')';
+      updateNav(key);
+    }
+
+    function updateNav(key) {
+      var items = _carouselData[key] || [];
+      var idx = _carouselIdx[key] || 0;
+      var prev = document.getElementById('prev-'+key);
+      var next = document.getElementById('next-'+key);
+      var pos = document.getElementById('pos-'+key);
+      if (prev) prev.disabled = idx <= 0;
+      if (next) next.disabled = idx >= items.length - 1;
+      if (pos) pos.textContent = items.length ? (idx+1)+' / '+items.length : '';
+      var track = document.getElementById('track-'+key);
+      if (track) track.style.transform = 'translateX(-' + (idx * 100) + '%)';
+    }
+
+    function carouselPrev(key) {
+      if (!_carouselIdx[key]) _carouselIdx[key] = 0;
+      if (_carouselIdx[key] > 0) { _carouselIdx[key]--; updateNav(key); }
+    }
+    function carouselNext(key) {
+      var items = _carouselData[key] || [];
+      if (!_carouselIdx[key]) _carouselIdx[key] = 0;
+      if (_carouselIdx[key] < items.length - 1) { _carouselIdx[key]++; updateNav(key); }
+    }
+
+    function togglePanel(statEl, key) {
+      var carousel = document.getElementById('stat-carousel');
+      var panel = document.getElementById('panel-'+key);
+      var allStats = document.querySelectorAll('.stat[data-panel]');
+      var allPanels = document.querySelectorAll('.carousel-panel');
+      // If clicking the same active panel — close it
+      if (_activePanel === key) {
+        carousel.classList.remove('open');
+        allPanels.forEach(function(p){p.classList.remove('active')});
+        allStats.forEach(function(s){s.classList.remove('active')});
+        _activePanel = null; _activeStat = null;
+        return;
+      }
+      // Render items if not already rendered
+      if (!_carouselIdx.hasOwnProperty(key)) renderTrack(key);
+      // Show
+      allPanels.forEach(function(p){p.classList.remove('active')});
+      allStats.forEach(function(s){s.classList.remove('active')});
+      panel.classList.add('active');
+      statEl.classList.add('active');
+      carousel.classList.add('open');
+      _activePanel = key; _activeStat = statEl;
+    }
+    // Keyboard nav
+    document.addEventListener('keydown', function(e) {
+      if (!_activePanel) return;
+      if (e.key === 'ArrowLeft') { e.preventDefault(); carouselPrev(_activePanel); }
+      if (e.key === 'ArrowRight') { e.preventDefault(); carouselNext(_activePanel); }
+      if (e.key === 'Escape') { if (_activeStat) togglePanel(_activeStat, _activePanel); }
+    });
+    </script>
     {% endif %}
 
     {{ body | safe }}
@@ -806,7 +977,8 @@ PAGE_TITLES = {
     "tests":    ("Graded Exercises", "Scores recorded by teachers"),
 }
 
-def render(title, view, body, counts=None, show_stats=False, flash=None, flash_cls="ok"):
+def render(title, view, body, counts=None, show_stats=False, flash=None, flash_cls="ok",
+           carousel_json="{}"):
     scraping = _scrape_lock.locked()
     if CLOUD_MODE and not scraping:
         try:
@@ -826,6 +998,7 @@ def render(title, view, body, counts=None, show_stats=False, flash=None, flash_c
         cloud_mode=CLOUD_MODE,
         unread=unread_message_count(),
         page_title=page_title, page_sub=page_sub,
+        carousel_json=carousel_json,
     )
 
 
@@ -958,8 +1131,32 @@ def home():
         cards = '<div class="card-list">' + "".join(render_card(a) for a in rows) + '</div>'
 
     body = "".join(filters) + cards
+
+    # Build carousel data (compact subset of fields for JS)
+    def _carousel_item(a):
+        return {
+            "subject": a.get("subject", ""),
+            "description": (a.get("description") or "")[:200],
+            "pretty_date": a.get("pretty_date", ""),
+            "days_until": a.get("days_until"),
+            "is_overdue": a.get("is_overdue", False),
+            "is_today": a.get("is_today", False),
+            "is_test": is_test_entry(a),
+        }
+    today_obj = date.today()
+    in_week = lambda a: a["days_until"] is not None and 0 <= a["days_until"] <= 7 and not a["done"]
+    carousel_data = {
+        "overdue": [_carousel_item(a) for a in assignments if a["is_overdue"]],
+        "today": [_carousel_item(a) for a in assignments if a["is_today"] and not a["done"]],
+        "week": [_carousel_item(a) for a in assignments if in_week(a)],
+        "tests": [_carousel_item(a) for a in assignments if in_week(a) and is_test_entry(a)],
+        "upcoming": [_carousel_item(a) for a in assignments if a["is_upcoming"] and not a["done"]],
+    }
+    carousel_json_str = json.dumps(carousel_data, ensure_ascii=False)
+
     return render("Homework", "home", body, _count_summary(assignments), show_stats=True,
-                  flash=request.args.get("flash"), flash_cls=request.args.get("cls", "ok"))
+                  flash=request.args.get("flash"), flash_cls=request.args.get("cls", "ok"),
+                  carousel_json=carousel_json_str)
 
 
 @app.route("/diary")
