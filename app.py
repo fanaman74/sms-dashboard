@@ -507,7 +507,7 @@ nav.tabs a.active .count{background:var(--accent); color:#fff}
 .filters .toggle input{accent-color:var(--accent)}
 
 /* card list */
-.card-list{display:flex; flex-direction:column; gap:.55rem}
+.card-list{display:grid; grid-template-columns:1fr 1fr; gap:.55rem}
 .card{
   position:relative; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
   padding:.95rem 1.1rem .95rem 1.25rem; display:grid; grid-template-columns:auto 96px 1fr; gap:.9rem;
@@ -655,6 +655,7 @@ nav.tabs a.active .count{background:var(--accent); color:#fff}
   .page-head h1{font-size:1.35rem}
   .stats{grid-template-columns:repeat(auto-fit, minmax(120px, 1fr))}
   .stat .v{font-size:2rem}
+  .card-list{grid-template-columns:1fr}
   .card{grid-template-columns:auto 1fr; gap:.65rem}
   .card .when{grid-column:2; order:2}
   .card .body{grid-column:1/-1; order:3}
