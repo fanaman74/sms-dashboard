@@ -316,122 +316,92 @@ def esc(s):
 
 # ---------- templates ----------
 
-BASE_CSS = """
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap');
+BASE_CSS = r"""
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
 :root{
-  --bg:#fafaf7;            /* warm paper */
+  --bg:#FAFAF8;
   --surface:#ffffff;
-  --surface-2:#f4f3ee;
-  --text:#1a1a1c;
-  --text-muted:#6b7280;
-  --text-soft:#9ca3af;
-  --border:#e8e6df;
-  --border-strong:#d4d2ca;
-  --accent:#4338ca;         /* deep indigo */
-  --accent-2:#7c3aed;       /* violet companion */
-  --accent-hover:#3730a3;
-  --accent-soft:#eef2ff;
-  --danger:#b91c1c;
-  --danger-soft:#fef2f2;
-  --warn:#b45309;
-  --warn-soft:#fffbeb;
-  --ok:#047857;
-  --ok-soft:#ecfdf5;
-  --info:#0369a1;
-  --info-soft:#f0f9ff;
-  --shadow-sm:0 1px 2px rgba(20,22,28,.04), 0 1px 3px rgba(20,22,28,.05);
-  --shadow-md:0 6px 20px -4px rgba(20,22,28,.09), 0 2px 6px rgba(20,22,28,.04);
-  --shadow-lg:0 18px 40px -12px rgba(20,22,28,.14);
-  --radius:12px;
-  --radius-sm:8px;
-  --sidebar-w:240px;
-}
-@media (prefers-color-scheme: dark){
-  :root{
-    --bg:#0d0f14;
-    --surface:#151821;
-    --surface-2:#1d212d;
-    --text:#e8eaed;
-    --text-muted:#9ca3af;
-    --text-soft:#6b7280;
-    --border:#232734;
-    --border-strong:#363b4a;
-    --accent:#a5b4fc;
-    --accent-2:#c4b5fd;
-    --accent-hover:#c7d2fe;
-    --accent-soft:#1e1b4b;
-    --danger:#fca5a5;
-    --danger-soft:#3a1717;
-    --warn:#fcd34d;
-    --warn-soft:#3a2a0e;
-    --ok:#6ee7b7;
-    --ok-soft:#0c3a28;
-    --info:#7dd3fc;
-    --info-soft:#0d2838;
-    --shadow-sm:0 1px 2px rgba(0,0,0,.4);
-    --shadow-md:0 8px 24px rgba(0,0,0,.4);
-    --shadow-lg:0 20px 48px rgba(0,0,0,.6);
-  }
+  --surface-2:#F5F4F1;
+  --text:#111110;
+  --text-muted:#6B6B6B;
+  --text-soft:#A0A0A0;
+  --border:#E8E8E5;
+  --border-strong:#D4D4D0;
+  --accent:#F97316;           /* Proseed orange */
+  --accent-hover:#EA6C0A;
+  --accent-soft:#FFF4EC;
+  --danger:#DC2626;
+  --danger-soft:#FEF2F2;
+  --warn:#D97706;
+  --warn-soft:#FFFBEB;
+  --ok:#16A34A;
+  --ok-soft:#F0FDF4;
+  --info:#2563EB;
+  --info-soft:#EFF6FF;
+  --shadow-sm:0 1px 3px rgba(0,0,0,.06);
+  --shadow-md:0 4px 12px rgba(0,0,0,.08);
+  --shadow-lg:0 12px 32px rgba(0,0,0,.10);
+  --radius:10px;
+  --radius-sm:7px;
 }
 *{box-sizing:border-box}
 html,body{margin:0;padding:0}
 body{
   font-family:'Inter',-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;
   background:var(--bg); color:var(--text); line-height:1.55;
-  -webkit-font-smoothing:antialiased; font-feature-settings:"cv11","ss01";
-  letter-spacing:-0.005em;
+  -webkit-font-smoothing:antialiased;
+  letter-spacing:-0.003em;
 }
 a{color:var(--accent); text-decoration:none}
 a:hover{color:var(--accent-hover)}
-h1,h2,h3,h4{margin:0; letter-spacing:-0.02em; font-weight:600; color:var(--text)}
+h1,h2,h3,h4{margin:0; letter-spacing:-0.025em; font-weight:800; color:var(--text)}
 
-/* layout — top header + main */
+/* layout */
 .app{min-height:100vh; display:flex; flex-direction:column}
 .topbar{
-  position:sticky; top:0; z-index:10; backdrop-filter:saturate(180%) blur(14px);
-  background:color-mix(in srgb, var(--bg) 85%, transparent);
+  position:sticky; top:0; z-index:10;
+  background:var(--surface);
   border-bottom:1px solid var(--border);
 }
 .topbar-inner{
-  max-width:1200px; margin:0 auto; padding:.9rem 1.75rem;
+  max-width:1160px; margin:0 auto; padding:.85rem 1.5rem;
   display:flex; justify-content:space-between; align-items:center; gap:1rem;
 }
-.main{padding:1.5rem 1.75rem 3.5rem; max-width:1200px; width:100%; margin:0 auto}
+.main{padding:1.75rem 1.5rem 4rem; max-width:1160px; width:100%; margin:0 auto}
 
 /* brand */
-.brand{display:flex; align-items:center; gap:.65rem}
+.brand{display:flex; align-items:center; gap:.7rem}
 .brand .logo{
-  width:34px; height:34px; border-radius:10px; display:grid; place-items:center; font-size:1.15rem;
-  background:linear-gradient(135deg, var(--accent), var(--accent-2)); color:#fff;
-  box-shadow:0 2px 8px rgba(67,56,202,.3);
+  width:32px; height:32px; border-radius:8px; display:grid; place-items:center; font-size:1rem;
+  background:var(--accent); color:#fff;
 }
-.brand .brand-name{font-weight:700; font-size:.95rem; letter-spacing:-0.01em}
+.brand .brand-name{font-weight:800; font-size:.95rem; letter-spacing:-0.02em; color:var(--text)}
 .brand .brand-sub{color:var(--text-muted); font-size:.72rem; font-weight:500}
 
-/* primary nav — horizontal tabs */
+/* nav tabs */
 nav.tabs{
-  max-width:1200px; margin:0 auto; padding:0 1.75rem;
-  display:flex; gap:.2rem; border-bottom:1px solid var(--border);
+  max-width:1160px; margin:0 auto; padding:0 1.5rem;
+  display:flex; gap:0; border-bottom:1px solid var(--border);
+  overflow-x:auto; scrollbar-width:none;
 }
+nav.tabs::-webkit-scrollbar{display:none}
 nav.tabs a{
-  display:inline-flex; align-items:center; gap:.5rem;
-  padding:.7rem .95rem; font-size:.88rem; font-weight:500; color:var(--text-muted);
-  border-bottom:2px solid transparent; margin-bottom:-1px; transition:all .12s;
+  display:inline-flex; align-items:center; gap:.45rem;
+  padding:.7rem .9rem; font-size:.85rem; font-weight:600; color:var(--text-muted);
+  border-bottom:2px solid transparent; margin-bottom:-1px; transition:color .12s;
   white-space:nowrap;
 }
 nav.tabs a:hover{color:var(--text)}
 nav.tabs a.active{color:var(--accent); border-bottom-color:var(--accent)}
-nav.tabs a.active .ico{color:var(--accent)}
-nav.tabs a .ico{width:15px; height:15px; color:var(--text-soft); transition:color .12s; flex-shrink:0}
-nav.tabs a:hover .ico{color:var(--text)}
+nav.tabs a .ico{width:14px; height:14px; flex-shrink:0}
 nav.tabs a .count{
-  margin-left:.25rem; padding:.05rem .45rem; font-size:.7rem; font-weight:600;
-  background:var(--surface-2); border-radius:999px; color:var(--text-muted); min-width:22px; text-align:center;
+  margin-left:.2rem; padding:.05rem .4rem; font-size:.68rem; font-weight:700;
+  background:var(--surface-2); border-radius:999px; color:var(--text-muted);
 }
-nav.tabs a.active .count{background:var(--accent); color:#fff}
+nav.tabs a.active .count{background:var(--accent-soft); color:var(--accent)}
 
-/* status pill in topbar */
+/* topbar status */
 .topbar-status{display:flex; align-items:center; gap:.5rem; font-size:.8rem; color:var(--text-muted)}
 .status-dot{width:7px; height:7px; border-radius:50%; background:var(--ok); flex-shrink:0}
 .status-dot.running{background:var(--warn); animation:pulse 1.4s ease-in-out infinite}
@@ -439,226 +409,243 @@ nav.tabs a.active .count{background:var(--accent); color:#fff}
 
 /* page header */
 .page-head{display:flex; align-items:flex-end; justify-content:space-between; margin-bottom:1.5rem; gap:1rem; flex-wrap:wrap}
-.page-head h1{font-size:1.65rem; line-height:1.15}
-.page-head .sub{color:var(--text-muted); font-size:.9rem; margin-top:.2rem}
+.page-head h1{font-size:1.75rem; line-height:1.1}
+.page-head .sub{color:var(--text-muted); font-size:.875rem; margin-top:.25rem; font-weight:400}
 
 /* buttons */
 .btn{
-  display:inline-flex; align-items:center; gap:.5rem; padding:.5rem .95rem;
+  display:inline-flex; align-items:center; gap:.45rem; padding:.5rem .9rem;
   background:var(--accent); color:#fff; border:0; border-radius:var(--radius-sm);
-  font-family:inherit; font-size:.875rem; font-weight:500; cursor:pointer;
-  transition:all .15s; box-shadow:var(--shadow-sm);
+  font-family:inherit; font-size:.85rem; font-weight:600; cursor:pointer;
+  transition:background .15s;
 }
-.btn:hover{background:var(--accent-hover); transform:translateY(-1px); box-shadow:var(--shadow-md)}
-.btn:active{transform:translateY(0)}
-.btn:disabled{opacity:.5; cursor:not-allowed; transform:none}
-.btn.ghost{background:transparent; color:var(--text); border:1px solid var(--border-strong); box-shadow:none}
-.btn.ghost:hover{background:var(--surface-2); transform:none; box-shadow:none}
-.btn .ico{width:15px; height:15px}
-.btn.sm{padding:.35rem .65rem; font-size:.8rem}
+.btn:hover{background:var(--accent-hover)}
+.btn:disabled{opacity:.5; cursor:not-allowed}
+.btn.ghost{background:var(--surface); color:var(--text); border:1px solid var(--border)}
+.btn.ghost:hover{background:var(--surface-2)}
+.btn .ico{width:14px; height:14px}
+.btn.sm{padding:.3rem .6rem; font-size:.8rem}
 
 /* stats grid */
-.stats{display:grid; grid-template-columns:repeat(auto-fit, minmax(148px, 1fr)); gap:.75rem; margin-bottom:1.25rem}
+.stats{display:grid; grid-template-columns:repeat(5,1fr); gap:.6rem; margin-bottom:1.5rem}
 .stat{
   background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
-  padding:1.25rem 1.35rem 1.1rem; box-shadow:var(--shadow-sm); position:relative; overflow:hidden;
-  transition:all .18s; cursor:pointer; user-select:none; text-decoration:none; display:block;
-  color:inherit;
+  padding:1.1rem 1.25rem .9rem; position:relative; overflow:hidden;
+  transition:border-color .15s, box-shadow .15s; cursor:pointer; user-select:none;
+  text-decoration:none; display:block; color:inherit;
 }
-.stat:hover{border-color:var(--border-strong); transform:translateY(-2px); box-shadow:var(--shadow-md); color:inherit}
-.stat.active{
-  border-color:var(--accent); box-shadow:0 0 0 2px var(--accent-soft), var(--shadow-md);
-  transform:translateY(-2px);
-}
-.stat .v{font-size:2.4rem; font-weight:700; letter-spacing:-.04em; line-height:1; font-variant-numeric:tabular-nums}
-.stat .l{font-size:.73rem; color:var(--text-muted); margin-top:.4rem; text-transform:uppercase; letter-spacing:.07em; font-weight:600}
-.stat.danger::before,.stat.warn::before,.stat.info::before,.stat.ok::before{
-  content:""; position:absolute; left:0; top:0; bottom:0; width:4px; border-radius:4px 0 0 4px;
-}
-.stat.danger::before{background:var(--danger)}
-.stat.warn::before{background:var(--warn)}
-.stat.info::before{background:var(--info)}
-.stat.ok::before{background:var(--ok)}
+.stat:hover{border-color:var(--border-strong); box-shadow:var(--shadow-sm); color:inherit}
+.stat.active{border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-soft)}
+.stat .v{font-size:2.25rem; font-weight:800; letter-spacing:-.05em; line-height:1; font-variant-numeric:tabular-nums; color:var(--text)}
+.stat .l{font-size:.7rem; color:var(--text-muted); margin-top:.35rem; font-weight:600; text-transform:uppercase; letter-spacing:.06em}
 .stat.danger .v{color:var(--danger)}
 .stat.warn .v{color:var(--warn)}
 .stat.ok .v{color:var(--ok)}
-.stat.info .v{color:var(--info)}
-
+.stat.active .v{color:var(--accent)}
 
 /* filters */
 .filters{
-  display:flex; gap:.6rem; flex-wrap:wrap; align-items:center; margin-bottom:1.25rem;
-  background:transparent; padding:0;
+  display:flex; gap:.5rem; flex-wrap:wrap; align-items:center; margin-bottom:1.25rem;
 }
-.seg{display:inline-flex; background:var(--surface); padding:3px; border-radius:9px; gap:2px; border:1px solid var(--border); box-shadow:var(--shadow-sm)}
+.seg{display:inline-flex; background:var(--surface); padding:3px; border-radius:var(--radius-sm); gap:2px; border:1px solid var(--border)}
 .seg a{
-  padding:.4rem .85rem; font-size:.825rem; color:var(--text-muted); border-radius:6px; font-weight:500;
-  transition:all .12s;
+  padding:.35rem .75rem; font-size:.8rem; color:var(--text-muted); border-radius:5px; font-weight:600;
+  transition:all .1s;
 }
 .seg a:hover{color:var(--text)}
-.seg a.on{background:var(--accent); color:#fff; box-shadow:0 1px 3px rgba(67,56,202,.3)}
+.seg a.on{background:var(--accent); color:#fff}
 .filters select, .filters input[type=text]{
-  padding:.45rem .7rem; font-size:.85rem; background:var(--surface); color:var(--text);
+  padding:.4rem .65rem; font-size:.83rem; background:var(--surface); color:var(--text);
   border:1px solid var(--border); border-radius:var(--radius-sm); outline:none;
-  font-family:inherit; box-shadow:var(--shadow-sm); transition:border-color .12s;
+  font-family:inherit; transition:border-color .12s;
 }
 .filters select:focus, .filters input:focus{border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-soft)}
-.filters .toggle{display:inline-flex; align-items:center; gap:.4rem; font-size:.85rem; color:var(--text-muted); cursor:pointer; padding:.4rem .7rem; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-sm); box-shadow:var(--shadow-sm)}
+.filters .toggle{display:inline-flex; align-items:center; gap:.4rem; font-size:.83rem; color:var(--text-muted); cursor:pointer; padding:.4rem .65rem; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-sm)}
 .filters .toggle input{accent-color:var(--accent)}
 
-/* card list */
-.card-list{display:grid; grid-template-columns:1fr 1fr; gap:.55rem}
+/* ── Proseed-style section groups ── */
+.hw-section{margin-bottom:1rem}
+.hw-section-head{
+  display:flex; align-items:center; justify-content:space-between;
+  padding:.6rem 1rem .55rem;
+  background:var(--surface); border:1px solid var(--border); border-radius:var(--radius) var(--radius) 0 0;
+  border-bottom:1px solid var(--border);
+}
+.hw-section-head h3{
+  font-size:.72rem; font-weight:700; text-transform:uppercase; letter-spacing:.08em;
+  color:var(--text-muted); margin:0;
+}
+.hw-section-head .badge{
+  font-size:.68rem; font-weight:700; padding:.15rem .45rem; border-radius:999px;
+  background:var(--surface-2); color:var(--text-muted);
+}
+.hw-section.s-overdue .hw-section-head h3{color:var(--danger)}
+.hw-section.s-overdue .hw-section-head{background:var(--danger-soft); border-color:#FECACA}
+.hw-section.s-today .hw-section-head h3{color:var(--warn)}
+.hw-section.s-today .hw-section-head{background:var(--warn-soft); border-color:#FDE68A}
+.hw-section-body{
+  background:var(--surface); border:1px solid var(--border); border-top:0;
+  border-radius:0 0 var(--radius) var(--radius); overflow:hidden;
+}
+
+/* ── Proseed-style card rows ── */
 .card{
-  position:relative; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
-  padding:.95rem 1.1rem .95rem 1.25rem; display:grid; grid-template-columns:auto 96px 1fr; gap:.9rem;
-  align-items:start; box-shadow:var(--shadow-sm); transition:all .15s;
+  display:flex; align-items:flex-start; gap:.75rem;
+  padding:.7rem 1rem;
+  border-bottom:1px solid var(--border);
+  transition:background .1s;
+  position:relative;
 }
-.card::before{content:""; position:absolute; left:0; top:10px; bottom:10px; width:3px; border-radius:3px; background:transparent; transition:background .15s}
-.card:hover{border-color:var(--border-strong); box-shadow:var(--shadow-md); transform:translateY(-1px)}
-.card.done{opacity:.5}
-.card.done .desc, .card.done .subj{text-decoration:line-through; text-decoration-thickness:1.5px}
-.card.today::before{background:var(--warn)}
-.card.overdue::before{background:var(--danger)}
-.card.overdue{background:linear-gradient(90deg, var(--danger-soft) 0%, var(--surface) 40%)}
-.card.soon::before{background:var(--info)}
+.card:last-child{border-bottom:0}
+.card:hover{background:var(--bg)}
+.card.done{opacity:.45}
+.card.done .card-desc{text-decoration:line-through; text-decoration-thickness:1px}
 
+/* checkbox */
 .check{
-  width:22px; height:22px; border:2px solid var(--border-strong); border-radius:7px;
+  flex-shrink:0; width:18px; height:18px; border:1.5px solid var(--border-strong); border-radius:5px;
   background:var(--surface); cursor:pointer; display:grid; place-items:center; padding:0; margin-top:2px;
-  transition:all .15s;
+  transition:all .12s;
 }
-.check:hover{border-color:var(--accent); transform:scale(1.05)}
+.check:hover{border-color:var(--accent)}
 .check.checked{background:var(--accent); border-color:var(--accent); color:#fff}
-.check.checked::after{content:""; width:11px; height:6px; border-left:2px solid currentColor; border-bottom:2px solid currentColor; transform:rotate(-45deg) translate(1px,-1px)}
+.check.checked::after{content:""; width:9px; height:5px; border-left:2px solid #fff; border-bottom:2px solid #fff; transform:rotate(-45deg) translate(1px,-1px)}
 
-.when{display:flex; flex-direction:column; gap:.1rem; padding-top:2px}
-.when .date{font-size:.72rem; color:var(--text-muted); font-weight:600; text-transform:uppercase; letter-spacing:.05em}
-.when .days{font-size:1rem; font-weight:600; letter-spacing:-.015em; font-variant-numeric:tabular-nums}
-.when.today .days{color:var(--warn)}
-.when.overdue .days{color:var(--danger)}
-.when.soon .days{color:var(--info)}
-.when.later .days{color:var(--text)}
-
-.body{display:flex; flex-direction:column; gap:.45rem; min-width:0}
-.meta{display:flex; gap:.5rem; align-items:center; flex-wrap:wrap}
-.subj{
-  display:inline-flex; align-items:center; gap:.3rem; font-size:.7rem; font-weight:700;
-  padding:.2rem .55rem; border-radius:5px; letter-spacing:.03em;
-  background:hsl(var(--h) 70% 94%); color:hsl(var(--h) 55% 28%);
-  font-family:'JetBrains Mono',ui-monospace,monospace;
+/* subject dot */
+.card-dot{
+  flex-shrink:0; width:8px; height:8px; border-radius:50%;
+  background:hsl(var(--h) 65% 52%); margin-top:6px;
 }
-.teacher{font-size:.78rem; color:var(--text-muted); font-weight:500}
+
+/* card body */
+.card-body{flex:1; min-width:0; display:flex; flex-direction:column; gap:.25rem}
+.card-row1{display:flex; align-items:center; gap:.5rem; flex-wrap:wrap}
+.card-desc{font-size:.88rem; font-weight:600; color:var(--text); line-height:1.4; flex:1; min-width:0}
+.card-meta{display:flex; align-items:center; gap:.4rem; flex-wrap:wrap; margin-left:auto; flex-shrink:0}
+.card-subj{
+  font-size:.68rem; font-weight:700; padding:.15rem .45rem; border-radius:4px;
+  letter-spacing:.04em;
+  background:hsl(var(--h) 70% 94%); color:hsl(var(--h) 55% 28%);
+}
+.card-date{font-size:.75rem; color:var(--text-muted); font-weight:500; white-space:nowrap}
+.card-status{
+  display:inline-flex; align-items:center; font-size:.67rem; font-weight:700;
+  padding:.15rem .5rem; border-radius:999px; letter-spacing:.04em; white-space:nowrap;
+}
+.card-status.overdue{background:#FEE2E2; color:#B91C1C}
+.card-status.today{background:#FEF3C7; color:#92400E}
+.card-status.soon{background:#EFF6FF; color:#1D4ED8}
+.card-status.test-pill{background:#FEE2E2; color:#B91C1C}
+.card-teacher{font-size:.75rem; color:var(--text-muted)}
+.card-note{
+  font-size:.78rem; padding:.3rem .5rem; background:transparent; color:var(--text);
+  border:1px dashed var(--border-strong); border-radius:5px; width:100%; font-family:inherit;
+  transition:all .1s;
+}
+.card-note:hover{background:var(--surface-2)}
+.card-note:focus{outline:none; border-color:var(--accent); border-style:solid; box-shadow:0 0 0 2px var(--accent-soft); background:var(--surface)}
+.card-note::placeholder{color:var(--text-soft)}
+.card-atts{display:flex; flex-wrap:wrap; gap:.35rem}
+.att{
+  display:inline-flex; align-items:center; gap:.3rem; font-size:.75rem; padding:.25rem .55rem;
+  background:var(--surface-2); color:var(--text-muted); border:1px solid var(--border);
+  border-radius:5px; text-decoration:none; transition:all .1s; font-weight:500;
+}
+.att:hover{border-color:var(--accent); color:var(--accent); background:var(--accent-soft)}
 
 /* messages */
 .msg-card{
   background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
-  padding:.85rem 1rem; box-shadow:var(--shadow-sm); transition:border-color .15s, box-shadow .15s;
+  padding:.85rem 1rem; transition:border-color .12s; margin-bottom:.5rem;
 }
-.msg-card:hover{border-color:var(--border-strong); box-shadow:var(--shadow-md)}
-.msg-card.unread{border-left:3px solid var(--accent); padding-left:calc(1rem - 3px); background:linear-gradient(90deg, var(--accent-soft), var(--surface) 40%)}
-.msg-meta{display:flex; justify-content:space-between; align-items:center; font-size:.8rem; color:var(--text-muted); margin-bottom:.25rem}
-.msg-sender{font-weight:600; color:var(--text)}
-.msg-subject{margin:.1rem 0 .3rem; font-size:.95rem; font-weight:600; color:var(--text); line-height:1.35}
+.msg-card:hover{border-color:var(--border-strong); box-shadow:var(--shadow-sm)}
+.msg-card.unread{border-left:3px solid var(--accent); padding-left:calc(1rem - 2px)}
+.msg-meta{display:flex; justify-content:space-between; align-items:center; font-size:.78rem; color:var(--text-muted); margin-bottom:.2rem}
+.msg-sender{font-weight:700; color:var(--text)}
+.msg-subject{margin:.1rem 0 .3rem; font-size:.93rem; font-weight:600; color:var(--text); line-height:1.35}
 .msg-card.unread .msg-subject{color:var(--accent)}
-.msg-excerpt{font-size:.85rem; color:var(--text-muted); line-height:1.45; max-height:3.3em; overflow:hidden}
+.msg-excerpt{font-size:.83rem; color:var(--text-muted); line-height:1.45; max-height:3em; overflow:hidden}
 
-/* grades / term reports */
-.year-heading{margin:1rem 0 .5rem; font-size:.9rem; color:var(--text-muted); font-weight:600; letter-spacing:.03em; text-transform:uppercase}
-.report-grid{display:grid; grid-template-columns:repeat(auto-fit, minmax(260px, 1fr)); gap:.5rem; margin-bottom:1rem}
+/* grades */
+.year-heading{margin:1rem 0 .5rem; font-size:.78rem; color:var(--text-muted); font-weight:700; letter-spacing:.06em; text-transform:uppercase}
+.report-grid{display:grid; grid-template-columns:repeat(auto-fit, minmax(240px, 1fr)); gap:.5rem; margin-bottom:1rem}
 .report-card{
-  display:flex; align-items:center; gap:.75rem; padding:.75rem 1rem; background:var(--surface);
+  display:flex; align-items:center; gap:.7rem; padding:.7rem .95rem; background:var(--surface);
   border:1px solid var(--border); border-radius:var(--radius); text-decoration:none; color:var(--text);
-  box-shadow:var(--shadow-sm); transition:all .15s;
-}
-.report-card:hover{border-color:var(--accent); background:var(--accent-soft); transform:translateY(-1px)}
-.report-icon{font-size:1.6rem; line-height:1}
-.report-label{font-size:.9rem; font-weight:600; color:var(--text)}
-.report-sub{font-size:.75rem; color:var(--text-muted); margin-top:2px}
-.muted-small{color:var(--text-muted); font-size:.82rem; max-width:320px}
-@media (prefers-color-scheme: dark){
-  .subj{background:hsl(var(--h) 40% 20%); color:hsl(var(--h) 80% 78%)}
-}
-.pill{
-  display:inline-flex; align-items:center; gap:.25rem; padding:.15rem .5rem; border-radius:5px;
-  font-size:.68rem; font-weight:700; letter-spacing:.05em; text-transform:uppercase;
-}
-.pill.test{background:var(--danger-soft); color:var(--danger)}
-.pill.assign{background:var(--accent-soft); color:var(--accent)}
-.pill.diary{background:var(--info-soft); color:var(--info)}
-
-.desc{font-size:.935rem; color:var(--text); line-height:1.55; white-space:pre-wrap; word-wrap:break-word}
-.desc a{color:var(--accent); text-decoration:underline; text-underline-offset:2px}
-.atts{display:flex; flex-wrap:wrap; gap:.4rem; margin-top:.15rem}
-.atts .att{
-  display:inline-flex; align-items:center; gap:.35rem; font-size:.78rem; padding:.3rem .6rem;
-  background:var(--surface-2); color:var(--text); border:1px solid var(--border);
-  border-radius:7px; text-decoration:none; transition:all .12s; font-weight:500;
-}
-.atts .att:hover{background:var(--accent-soft); border-color:var(--accent); color:var(--accent); transform:translateY(-1px)}
-.note-input{
-  margin-top:.35rem; font-size:.82rem; padding:.4rem .6rem; background:transparent; color:var(--text);
-  border:1px dashed var(--border-strong); border-radius:6px; width:100%; font-family:inherit;
   transition:all .12s;
 }
-.note-input:hover{background:var(--surface-2)}
-.note-input:focus{outline:none; border-color:var(--accent); border-style:solid; background:var(--surface); box-shadow:0 0 0 3px var(--accent-soft)}
-.note-input::placeholder{color:var(--text-soft)}
+.report-card:hover{border-color:var(--accent); background:var(--accent-soft)}
+.report-icon{font-size:1.5rem; line-height:1}
+.report-label{font-size:.88rem; font-weight:600; color:var(--text)}
+.report-sub{font-size:.73rem; color:var(--text-muted); margin-top:2px}
+.muted-small{color:var(--text-muted); font-size:.82rem; max-width:320px}
 
-.actions{display:flex; align-items:start}
+.subj{
+  display:inline-flex; align-items:center; gap:.3rem; font-size:.68rem; font-weight:700;
+  padding:.15rem .45rem; border-radius:4px; letter-spacing:.04em;
+  background:hsl(var(--h) 70% 94%); color:hsl(var(--h) 55% 28%);
+}
 
-/* tables (diary, schedule, tests) */
+/* tables */
 .data-table{
   width:100%; border-collapse:collapse; background:var(--surface);
-  border:1px solid var(--border); border-radius:var(--radius); overflow:hidden; box-shadow:var(--shadow-sm);
+  border:1px solid var(--border); border-radius:var(--radius); overflow:hidden;
 }
 .data-table th, .data-table td{
-  padding:.7rem .95rem; text-align:left; border-bottom:1px solid var(--border); font-size:.9rem; vertical-align:top;
+  padding:.65rem .9rem; text-align:left; border-bottom:1px solid var(--border); font-size:.88rem; vertical-align:top;
 }
 .data-table th{
-  background:var(--surface-2); font-size:.7rem; font-weight:700; text-transform:uppercase;
+  background:var(--surface-2); font-size:.68rem; font-weight:700; text-transform:uppercase;
   color:var(--text-muted); letter-spacing:.08em;
 }
 .data-table tr:last-child td{border-bottom:0}
-.data-table tr:hover td{background:var(--surface-2)}
+.data-table tr:hover td{background:var(--bg)}
 
-/* empty state */
+/* empty */
 .empty{
-  text-align:center; padding:4rem 1rem; background:var(--surface); border:1px dashed var(--border-strong);
+  text-align:center; padding:3.5rem 1rem; background:var(--surface); border:1px solid var(--border);
   border-radius:var(--radius); color:var(--text-muted);
 }
-.empty .icon{font-size:2.75rem; margin-bottom:.7rem; opacity:.7}
-.empty h3{margin:.25rem 0; color:var(--text); font-weight:600; font-size:1.05rem}
-.empty p{margin:.3rem 0 0; font-size:.9rem; max-width:360px; margin-left:auto; margin-right:auto}
+.empty .icon{font-size:2.5rem; margin-bottom:.6rem; opacity:.6}
+.empty h3{margin:.2rem 0; color:var(--text); font-weight:700; font-size:1rem}
+.empty p{margin:.25rem 0 0; font-size:.875rem; max-width:360px; margin-left:auto; margin-right:auto}
 
 /* toast */
 .toast{
-  position:fixed; bottom:1.25rem; right:1.25rem; padding:.75rem 1.15rem; border-radius:var(--radius);
-  background:var(--surface); color:var(--text); border:1px solid var(--border); font-size:.88rem; font-weight:500;
+  position:fixed; bottom:1.25rem; right:1.25rem; padding:.7rem 1.1rem; border-radius:var(--radius);
+  background:var(--surface); color:var(--text); border:1px solid var(--border); font-size:.86rem; font-weight:500;
   box-shadow:var(--shadow-lg); animation:slideUp .3s ease, fadeOut .4s 3.5s forwards; z-index:100;
   display:flex; align-items:center; gap:.5rem; max-width:420px;
 }
-.toast::before{content:""; width:8px; height:8px; border-radius:50%; background:var(--ok)}
+.toast::before{content:""; width:7px; height:7px; border-radius:50%; background:var(--ok); flex-shrink:0}
 .toast.err{color:var(--danger)}
 .toast.err::before{background:var(--danger)}
 @keyframes slideUp{from{transform:translateY(12px); opacity:0} to{transform:none; opacity:1}}
 @keyframes fadeOut{to{opacity:0; transform:translateY(-6px)}}
 
+/* atts shared */
+.atts{display:flex; flex-wrap:wrap; gap:.35rem; margin-top:.15rem}
+.atts .att{
+  display:inline-flex; align-items:center; gap:.3rem; font-size:.75rem; padding:.25rem .55rem;
+  background:var(--surface-2); color:var(--text-muted); border:1px solid var(--border);
+  border-radius:5px; text-decoration:none; transition:all .1s; font-weight:500;
+}
+.atts .att:hover{border-color:var(--accent); color:var(--accent); background:var(--accent-soft)}
+
 /* responsive */
-@media (max-width:840px){
+@media (max-width:860px){
   .topbar-inner{padding:.7rem 1rem}
-  .brand .brand-sub, .topbar-status span{display:none}
-  nav.tabs{padding:0 .6rem; overflow-x:auto; scrollbar-width:none}
-  nav.tabs::-webkit-scrollbar{display:none}
-  nav.tabs a{padding:.6rem .7rem; font-size:.82rem}
-  nav.tabs a span:not(.count){display:inline}
+  .brand .brand-sub{display:none}
+  nav.tabs{padding:0 .75rem}
+  nav.tabs a{padding:.6rem .65rem; font-size:.8rem}
   .main{padding:1.25rem 1rem 3rem}
-  .page-head h1{font-size:1.35rem}
-  .stats{grid-template-columns:repeat(auto-fit, minmax(120px, 1fr))}
-  .stat .v{font-size:2rem}
-  .card-list{grid-template-columns:1fr}
-  .card{grid-template-columns:auto 1fr; gap:.65rem}
-  .card .when{grid-column:2; order:2}
-  .card .body{grid-column:1/-1; order:3}
+  .page-head h1{font-size:1.4rem}
+  .stats{grid-template-columns:repeat(3,1fr)}
+  .stat .v{font-size:1.9rem}
+}
+@media (max-width:560px){
+  .stats{grid-template-columns:repeat(2,1fr)}
+  .card-meta{margin-left:0; width:100%}
 }
 
 form.inline{display:inline; margin:0}
@@ -681,7 +668,7 @@ SHELL = """
           <div class="brand-sub">Philippe · Bruxelles IV · S5 ENC</div>
         </div>
       </div>
-      <div style="display:flex; align-items:center; gap:.9rem">
+      <div style="display:flex; align-items:center; gap:.85rem">
         <div class="topbar-status">
           <span class="status-dot {% if scraping %}running{% endif %}"></span>
           <span>{% if scraping %}Scraping…{% elif last_run %}Updated {{ last_run }}{% else %}No data yet{% endif %}</span>
@@ -747,7 +734,7 @@ SHELL = """
     <div class="stats">
       <a class="stat {% if counts.overdue %}danger{% endif %} {% if active_stat=='overdue' %}active{% endif %}" href="?show=overdue{{ stat_qs }}"><div class="v">{{ counts.overdue }}</div><div class="l">Overdue</div></a>
       <a class="stat {% if counts.today %}warn{% endif %} {% if active_stat=='today' %}active{% endif %}" href="?show=today{{ stat_qs }}"><div class="v">{{ counts.today }}</div><div class="l">Due today</div></a>
-      <a class="stat info {% if active_stat=='week' %}active{% endif %}" href="?show=week{{ stat_qs }}"><div class="v">{{ counts.week }}</div><div class="l">This week</div></a>
+      <a class="stat {% if active_stat=='week' %}active{% endif %}" href="?show=week{{ stat_qs }}"><div class="v">{{ counts.week }}</div><div class="l">This week</div></a>
       <a class="stat {% if counts.tests_week %}danger{% endif %} {% if active_stat=='tests' %}active{% endif %}" href="?show=tests{{ stat_qs }}"><div class="v">{{ counts.tests_week }}</div><div class="l">Tests</div></a>
       <a class="stat {% if active_stat=='upcoming' %}active{% endif %}" href="?show=upcoming{{ stat_qs }}"><div class="v">{{ counts.upcoming }}</div><div class="l">Upcoming</div></a>
     </div>
@@ -758,7 +745,6 @@ SHELL = """
 </div>
 
 <script>
-// poll status; reload when a run completes
 (function(){
   let tries = 0;
   let wasRunning = {{ 'true' if scraping else 'false' }};
@@ -770,15 +756,13 @@ SHELL = """
       } else if (wasRunning) {
         location.reload();
       } else if (++tries < 12) {
-        // not running yet but user just clicked — check a few more times
         setTimeout(poll, 3000);
       }
     }).catch(()=>setTimeout(poll, 6000));
   };
   setTimeout(poll, 3000);
 })();
-// enhance note inputs: save on blur via fetch, no redirect
-document.querySelectorAll('.note-input').forEach(i => {
+document.querySelectorAll('.card-note').forEach(i => {
   i.addEventListener('blur', () => {
     const key = i.dataset.key;
     const fd = new FormData();
@@ -786,7 +770,6 @@ document.querySelectorAll('.note-input').forEach(i => {
     fetch('/set-note', {method:'POST', body:fd});
   });
 });
-// checkbox toggle without full redirect
 document.querySelectorAll('.check').forEach(b => {
   b.addEventListener('click', async e => {
     e.preventDefault();
@@ -840,38 +823,41 @@ def render(title, view, body, counts=None, show_stats=False, flash=None, flash_c
 
 
 def render_card(a):
+    """Render a Proseed-style horizontal card row."""
     done_cls = "done" if a["done"] else ""
-    state_cls = ""
-    when_cls = "later"
     days = a["days_until"]
+
+    # Status pill
     if a["done"]:
-        pass
+        status_html = ""
     elif a["is_overdue"]:
-        state_cls, when_cls = "overdue", "overdue"
+        status_html = '<span class="card-status overdue">Overdue</span>'
     elif a["is_today"]:
-        state_cls, when_cls = "today", "today"
+        status_html = '<span class="card-status today">Due Today</span>'
     elif days is not None and 1 <= days <= 3:
-        state_cls, when_cls = "soon", "soon"
+        status_html = f'<span class="card-status soon">in {days}d</span>'
+    else:
+        status_html = ""
 
     if days is None:
-        days_lbl = "—"
+        date_lbl = esc(a["pretty_date"])
     elif a["is_today"]:
-        days_lbl = "Today"
+        date_lbl = "Today"
     elif days == 1:
-        days_lbl = "Tomorrow"
+        date_lbl = "Tomorrow"
     elif days < 0:
-        days_lbl = f"{-days}d ago"
+        date_lbl = esc(a["pretty_date"])
     else:
-        days_lbl = f"in {days}d"
+        date_lbl = esc(a["pretty_date"])
 
     hue = subject_hue(a.get("subject", ""))
     check_cls = "check checked" if a["done"] else "check"
-    pill = '<span class="pill test">🔥 Test</span>' if is_test_entry(a) else ''
+    test_pill = '<span class="card-status test-pill">🔥 Test</span>' if is_test_entry(a) else ''
     teacher = teacher_label(a.get("subject", ""))
-    teacher_html = f'<span class="teacher">· {esc(teacher)}</span>' if teacher else ''
-    desc = esc(a.get("description", ""))
+    teacher_html = f'<span class="card-teacher">· {esc(teacher)}</span>' if teacher else ''
+    desc = esc(a.get("description", "") or "")
 
-    # Render attachments
+    # Attachments
     atts_html = ""
     atts = a.get("attachments") or []
     if atts:
@@ -881,28 +867,44 @@ def render_card(a):
             name = esc(att.get("name", "attachment"))[:60]
             href = esc(att.get("href", "#"))
             chips.append(f'<a class="att" href="{href}" target="_blank" rel="noopener">{icon} {name}</a>')
-        atts_html = '<div class="atts">' + "".join(chips) + "</div>"
+        atts_html = '<div class="card-atts">' + "".join(chips) + "</div>"
 
-    return f"""
-    <div class="card {done_cls} {state_cls}">
+    note_val = esc(a.get("note", "") or "")
+
+    return f"""<div class="card {done_cls}">
       <button class="{check_cls}" data-key="{esc(a['key'])}" aria-label="Toggle done"></button>
-      <div class="when {when_cls}">
-        <div class="date">{esc(a['pretty_date'])}</div>
-        <div class="days">{days_lbl}</div>
-      </div>
-      <div class="body">
-        <div class="meta">
-          <span class="subj" style="--h:{hue}">{esc(a.get('subject',''))}</span>
-          {teacher_html}
-          {pill}
+      <div class="card-dot" style="--h:{hue}"></div>
+      <div class="card-body">
+        <div class="card-row1">
+          <span class="card-desc">{desc}</span>
+          <div class="card-meta">
+            {test_pill}
+            {status_html}
+            <span class="card-subj" style="--h:{hue}">{esc(a.get('subject',''))}</span>
+            {teacher_html}
+            <span class="card-date">{date_lbl}</span>
+          </div>
         </div>
-        <div class="desc">{desc}</div>
         {atts_html}
-        <input class="note-input" type="text" data-key="{esc(a['key'])}"
-               value="{esc(a.get('note',''))}" placeholder="Add a note…">
+        <input class="card-note" type="text" data-key="{esc(a['key'])}"
+               value="{note_val}" placeholder="Add a note…">
       </div>
-    </div>
-    """
+    </div>"""
+
+
+def render_section(label, css_cls, items):
+    """Wrap a list of card rows in a Proseed-style section container."""
+    if not items:
+        return ""
+    count = len(items)
+    rows = "".join(render_card(a) for a in items)
+    return f"""<div class="hw-section {css_cls}">
+  <div class="hw-section-head">
+    <h3>{label}</h3>
+    <span class="badge">{count}</span>
+  </div>
+  <div class="hw-section-body">{rows}</div>
+</div>"""
 
 
 # ---------- routes ----------
@@ -914,12 +916,12 @@ def home():
     subject = request.args.get("subject", "")
     hide_done = request.args.get("hide_done") == "1"
 
-    # Stat cards map to these filter values
     STAT_FILTERS = {"overdue", "today", "week", "tests", "upcoming"}
     active_stat = show if show in STAT_FILTERS else ""
 
     subjects = sorted({a["subject"] for a in assignments if a["subject"]})
     in_week = lambda a: a["days_until"] is not None and 0 <= a["days_until"] <= 7 and not a["done"]
+
     rows = assignments
     if show == "overdue":
         rows = [a for a in rows if a["is_overdue"]]
@@ -933,13 +935,11 @@ def home():
         rows = [a for a in rows if a["is_upcoming"] or a["is_overdue"]]
     elif show == "past":
         rows = [a for a in rows if not a["is_upcoming"] and not a["is_overdue"]]
-    # "all" → no extra filter
     if subject:
         rows = [a for a in rows if a["subject"] == subject]
     if hide_done:
         rows = [a for a in rows if not a["done"]]
 
-    # stat_qs carries subject/hide_done forward when clicking stat cards
     stat_qs_parts = []
     if subject:
         stat_qs_parts.append(f"&subject={esc(subject)}")
@@ -947,7 +947,7 @@ def home():
         stat_qs_parts.append("&hide_done=1")
     stat_qs = "".join(stat_qs_parts)
 
-    # Secondary filters row: subject dropdown + hide-done + "All" / "Past" shortcuts
+    # Filters bar
     filters = [
         '<div class="filters">',
         '<form method="get" style="display:inline-flex; gap:.5rem; align-items:center; flex-wrap:wrap">',
@@ -964,7 +964,6 @@ def home():
         f'<label class="toggle"><input type="checkbox" name="hide_done" value="1" {chk}'
         f' onchange="this.form.submit()"> Hide done</label>'
     )
-    # Quick-links for non-stat views
     filters.append('<div class="seg">')
     for val, lbl in [("past", "Past"), ("all", "All")]:
         on = "on" if show == val else ""
@@ -975,14 +974,41 @@ def home():
     filters.append('</div></form></div>')
 
     if not rows:
-        cards = """
-        <div class="empty">
+        cards = """<div class="empty">
           <div class="icon">✨</div>
           <h3>All caught up</h3>
           <p>No assignments match this filter.</p>
         </div>"""
     else:
-        cards = '<div class="card-list">' + "".join(render_card(a) for a in rows) + '</div>'
+        # For upcoming/all/subject views: group into Proseed-style sections
+        if show in ("upcoming", "all", "week") or subject:
+            overdue  = [a for a in rows if a["is_overdue"] and not a["done"]]
+            today    = [a for a in rows if a["is_today"]   and not a["done"] and not a["is_overdue"]]
+            days_2_7 = [a for a in rows if not a["is_overdue"] and not a["is_today"]
+                        and a["days_until"] is not None and 1 <= a["days_until"] <= 7 and not a["done"]]
+            upcoming = [a for a in rows if not a["is_overdue"] and not a["is_today"]
+                        and (a["days_until"] is None or a["days_until"] > 7) and not a["done"]]
+            done_    = [a for a in rows if a["done"]]
+            sections = (
+                render_section("Overdue", "s-overdue", overdue) +
+                render_section("Due Today", "s-today", today) +
+                render_section("This Week", "s-week", days_2_7) +
+                render_section("Upcoming", "s-upcoming", upcoming) +
+                render_section("Done", "s-done", done_)
+            )
+            cards = sections if sections.strip() else """<div class="empty">
+              <div class="icon">✨</div><h3>All caught up</h3>
+              <p>No assignments match this filter.</p></div>"""
+        else:
+            # For flat views (overdue only, today only, tests, past): plain list in one section
+            label_map = {
+                "overdue": ("Overdue", "s-overdue"),
+                "today":   ("Due Today", "s-today"),
+                "tests":   ("Tests this week", "s-week"),
+                "past":    ("Past", "s-upcoming"),
+            }
+            lbl, cls = label_map.get(show, ("Results", "s-upcoming"))
+            cards = render_section(lbl, cls, rows)
 
     body = "".join(filters) + cards
     return render("Homework", "home", body, _count_summary(assignments), show_stats=True,
