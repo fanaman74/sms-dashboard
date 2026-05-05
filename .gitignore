@@ -23,3 +23,4 @@ text_*.txt
 # local tooling
 .claude/
 .DS_Store
+.gstack/
